@@ -120,7 +120,7 @@ EventEnvelope
 ├── eventId
 ├── emittedAt
 ├── source: claude | codex
-├── surface: cli | desktop
+├── surface: cli | desktop | unknown
 ├── sessionId
 ├── turnId?
 ├── taskId?
@@ -141,7 +141,7 @@ EventEnvelope
 
 ### 6.2 归并规则
 
-Core 使用 `(source, surface, sessionId, turnId)` 作为任务关联主键，并用 `eventId` 与状态版本去重。每个任务的归并串行执行，避免多适配器事件竞争。
+Core 使用 `(source, surface, sessionId, turnId)` 作为任务关联主键，并用 `eventId` 与状态版本去重。适配器无法可靠区分 CLI 与 Desktop 时必须上报 `unknown`，不得猜测来源；后续事件确认来源后可提升精度。每个任务的归并串行执行，避免多适配器事件竞争。
 
 状态机：
 
@@ -227,7 +227,7 @@ Codex Adapter 使用 App Server 账户接口：
 - Ambient 常态不显示额度。
 - 悬停 Peek 在任务摘要下显示紧凑用量条。
 - Task Center 顶部显示所有可用窗口、已用比例、重置时间与新鲜度。
-- 可选 80% 和 95% 静默提醒归类为账户提示，不显示成任务失败。
+- 可选 80% 和 95% 静默提醒默认关闭；启用后归类为账户提示，不显示成任务失败。
 - 不估算“还能运行多少任务”，也不推测套餐价格。
 - 快照只保存在内存，过期后显示 `stale`。
 
@@ -267,7 +267,7 @@ Land 默认出现在当前活跃屏。内屏有刘海时贴合刘海；无刘海
 5. 验证事件投递。
 6. 引导用户在 Codex 官方 Hook 界面完成信任审核。
 
-安装器不得修改 shell alias，不向 `/usr/local/bin` 写文件。卸载器只删除 Perch 拥有的配置项与文件，并恢复被 Tap 包装的 Claude 状态行。
+所有配置更新使用原文件指纹校验与原子替换；检测到用户或其他进程并发修改时中止并重新生成差异，不覆盖新内容。安装器不得修改 shell alias，不向 `/usr/local/bin` 写文件。卸载器只删除当前仍匹配 Perch 所有权标识的配置项与文件；若用户在安装后修改了状态行，卸载器不恢复整份旧备份，而是展示差异并保留用户的新配置。
 
 首期发布源码和未签名产物，并解释 Gatekeeper 放行步骤。自动更新延后到稳定发布签名链建立后；首期只检查更新并打开 GitHub Release 页面。
 
