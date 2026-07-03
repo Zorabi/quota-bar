@@ -82,6 +82,7 @@ struct SettingsPanelView: View {
 
                 RefreshStatusStrip(model: model)
                 SettingsActionStrip(model: model)
+                ResetCreditExpirySettingsSection(model: model)
 
                 SettingsRow(title: "外观", detail: "跟随系统，或固定使用深色、浅色") {
                     Picker("", selection: settingsBinding(\.appearanceMode)) {
@@ -466,6 +467,74 @@ private struct SettingsActionStrip: View {
             Text(model.snapshot == nil ? "当前未连接" : "已连接当前账号")
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .foregroundStyle(model.snapshot == nil ? .orange : Color.quotaAccent)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.quotaCardBackground.opacity(0.76), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct ResetCreditExpirySettingsSection: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SettingsRow(
+                title: "Reset credits 过期时间",
+                detail: "手动查询当前账号可用 reset credits 的过期时间，不会自动刷新。"
+            ) {
+                Button(model.isQueryingResetCreditExpirations ? "查询中" : "查询过期时间") {
+                    model.queryResetCreditExpirations()
+                }
+                .disabled(model.isQueryingResetCreditExpirations)
+            }
+
+            if model.isQueryingResetCreditExpirations || model.resetCreditExpirySnapshot != nil || model.resetCreditExpiryErrorText != nil {
+                ResetCreditExpiryResultCard(model: model)
+            }
+        }
+    }
+}
+
+private struct ResetCreditExpiryResultCard: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if model.isQueryingResetCreditExpirations {
+                Text("正在查询...")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.quotaSecondaryText)
+            }
+
+            if let snapshot = model.resetCreditExpirySnapshot {
+                Text("可用 Reset credits：\(snapshot.availableCount)")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+
+                if snapshot.expirations.isEmpty {
+                    Text(snapshot.availableCount > 0 ? "过期时间不可用" : "暂无可用 reset credits")
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(Color.quotaSecondaryText)
+                } else {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(Array(snapshot.expirations.enumerated()), id: \.offset) { index, date in
+                            Text("\(index + 1). \(ResetCreditExpiryDisplayFormatter.expirationText(date))")
+                                .font(.system(size: 12, weight: .medium, design: .rounded))
+                                .monospacedDigit()
+                        }
+                    }
+                }
+
+                Text("上次查询：\(ResetCreditExpiryDisplayFormatter.fetchedAtText(snapshot.fetchedAt))")
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.quotaSecondaryText)
+            }
+
+            if let errorText = model.resetCreditExpiryErrorText {
+                Text(errorText)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.red)
+            }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
