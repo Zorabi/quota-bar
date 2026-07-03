@@ -8,7 +8,15 @@ struct CodexUsageWidgetApp: App {
 
     var body: some Scene {
         Settings {
-            SettingsPanelView(model: coordinator.model)
+            EmptyView()
+        }
+        .commands {
+            CommandGroup(replacing: .appSettings) {
+                Button("QuotaBar 设置") {
+                    coordinator.openSettings()
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
         }
     }
 }
@@ -21,11 +29,55 @@ final class AppCoordinator: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
+        syncLaunchAtLoginStatus()
+        applyActivationPolicy(model.settings)
         statusItemController = StatusItemController(
             model: model,
             desktopWidgetController: desktopWidgetController,
-            settingsWindowController: settingsWindowController
+            onOpenSettings: { [weak self] in
+                self?.openSettings()
+            }
         )
     }
+
+    private func syncLaunchAtLoginStatus() {
+        model.updateSettings { settings in
+            settings.launchesAtLogin = LaunchAtLoginController.isEnabled
+        }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            openSettings()
+        }
+        return true
+    }
+
+    func openSettings() {
+        applyActivationPolicy(model.settings, keepsSettingsVisible: true)
+        settingsWindowController.show(model: model) { [weak self] in
+            guard let self else {
+                return
+            }
+            self.desktopWidgetController.toggle(model: self.model)
+        } onClose: { [weak self] in
+            guard let self else {
+                return
+            }
+            self.applyActivationPolicy(self.model.settings, keepsSettingsVisible: false)
+        }
+    }
+
+    private func applyActivationPolicy(
+        _ settings: WidgetSettings,
+        keepsSettingsVisible: Bool? = nil
+    ) {
+        let settingsIsVisible = keepsSettingsVisible ?? settingsWindowController.isVisible
+        let policy: NSApplication.ActivationPolicy = settings.showsDockIcon || settingsIsVisible ? .regular : .accessory
+        NSApp.setActivationPolicy(policy)
+        if policy == .regular {
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+
 }

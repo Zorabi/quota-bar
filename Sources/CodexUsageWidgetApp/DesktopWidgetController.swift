@@ -5,6 +5,8 @@ import SwiftUI
 
 @MainActor
 final class DesktopWidgetController {
+    private static let panelWidth: CGFloat = 376
+
     private var panel: NSPanel?
     private weak var hostingView: NSHostingView<DesktopWidgetView>?
     private var resizeObservation: AnyCancellable?
@@ -36,14 +38,17 @@ final class DesktopWidgetController {
         panel.isMovableByWindowBackground = true
         panel.isOpaque = false
         configureLevel(panel, settings: model.settings)
-        resizeObservation = model.objectWillChange.sink { [weak self, weak panel, weak hostingView] _ in
+        resizeObservation = model.$snapshot
+            .combineLatest(model.$settings)
+            .dropFirst()
+            .sink { [weak self, weak panel, weak hostingView] _ in
             DispatchQueue.main.async {
                 guard let self, let panel, let hostingView, panel.isVisible else {
                     return
                 }
                 self.resizePanel(panel, toFit: hostingView)
             }
-        }
+            }
         resizePanel(panel, toFit: hostingView)
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
@@ -84,7 +89,7 @@ final class DesktopWidgetController {
 
     private func defaultFrame() -> NSRect {
         let visibleFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        let size = NSSize(width: 376, height: 1)
+        let size = NSSize(width: Self.panelWidth, height: 1)
         return NSRect(
             x: visibleFrame.maxX - size.width - 28,
             y: visibleFrame.maxY - size.height - 42,
@@ -97,11 +102,12 @@ final class DesktopWidgetController {
         hostingView.layoutSubtreeIfNeeded()
         let fittingSize = hostingView.fittingSize
         let currentFrame = panel.frame
+        let height = ceil(fittingSize.height)
         let newFrame = NSRect(
             x: currentFrame.minX,
-            y: currentFrame.maxY - fittingSize.height,
-            width: fittingSize.width,
-            height: fittingSize.height
+            y: currentFrame.maxY - height,
+            width: Self.panelWidth,
+            height: height
         )
         panel.setFrame(newFrame, display: true)
     }

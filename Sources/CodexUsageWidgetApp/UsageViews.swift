@@ -41,6 +41,7 @@ struct StatusPopoverView: View {
                     model.refresh()
                 }
                 .disabled(model.isRefreshing)
+                .frame(minWidth: 76)
             }
         }
         .padding(16)
@@ -64,6 +65,7 @@ struct StatusPopoverView: View {
 struct SettingsPanelView: View {
     @ObservedObject var model: AppModel
     let onToggleWidget: () -> Void
+    @State private var launchAtLoginError: String?
 
     init(model: AppModel, onToggleWidget: @escaping () -> Void = {}) {
         self.model = model
@@ -85,7 +87,7 @@ struct SettingsPanelView: View {
                 SettingsActionStrip(model: model)
 
                 SettingsRow(title: "刷新间隔", detail: "多久重新读取一次当前账号用量") {
-                    Picker("", selection: $model.settings.refreshIntervalMinutes) {
+                    Picker("", selection: settingsBinding(\.refreshIntervalMinutes)) {
                         ForEach([1, 5, 15, 30], id: \.self) { minutes in
                             Text("\(minutes) 分钟").tag(minutes)
                         }
@@ -96,7 +98,7 @@ struct SettingsPanelView: View {
 
                 VStack(alignment: .leading, spacing: 10) {
                     SettingsRow(title: "信息丰富度", detail: "影响详情视图里的辅助信息数量") {
-                        Picker("", selection: $model.settings.detailLevel) {
+                        Picker("", selection: settingsBinding(\.detailLevel)) {
                             ForEach(DetailLevel.allCases, id: \.self) { level in
                                 Text(level.displayText).tag(level)
                             }
@@ -110,7 +112,7 @@ struct SettingsPanelView: View {
 
                 VStack(alignment: .leading, spacing: 10) {
                     SettingsRow(title: "状态栏", detail: "控制菜单栏文本长度") {
-                        Picker("", selection: $model.settings.menuBarDensity) {
+                        Picker("", selection: settingsBinding(\.menuBarDensity)) {
                             ForEach(MenuBarDensity.allCases, id: \.self) { density in
                                 Text(density.displayText).tag(density)
                             }
@@ -123,9 +125,35 @@ struct SettingsPanelView: View {
                 }
 
                 SettingsRow(title: "Codex 字样", detail: "控制状态栏是否显示 Codex 前缀") {
-                    Toggle("", isOn: $model.settings.showsCodexPrefix)
+                    Toggle("", isOn: settingsBinding(\.showsCodexPrefix))
                         .toggleStyle(.switch)
                         .labelsHidden()
+                }
+
+                SettingsRow(title: "状态栏显示", detail: "控制是否在 macOS 状态栏显示当前 QuotaBar 用量文本；隐藏时尽量保持状态栏顺序稳定") {
+                    Toggle("", isOn: settingsBinding(\.showsStatusItem))
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+
+                SettingsRow(title: "Dock 图标", detail: "控制是否在 Dock 和应用菜单栏显示 QuotaBar；关闭设置窗口后生效") {
+                    Toggle("", isOn: settingsBinding(\.showsDockIcon))
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    SettingsRow(title: "开机启动", detail: "登录 macOS 后自动打开 QuotaBar；可在系统设置的登录项中管理") {
+                        Toggle("", isOn: launchAtLoginBinding)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                    }
+                    if let launchAtLoginError {
+                        Text(launchAtLoginError)
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(.red)
+                            .padding(.leading, 14)
+                    }
                 }
 
                 SettingsRow(title: "桌面小组件", detail: "显示 App 内悬浮小组件；原生系统小组件请在 macOS 小组件库中添加") {
@@ -137,7 +165,7 @@ struct SettingsPanelView: View {
                 }
 
                 SettingsRow(title: "吸附桌面", detail: "将 App 内悬浮小组件放到桌面层级；可与原生桌面组件共存") {
-                    Toggle("", isOn: $model.settings.pinsWidgetToDesktop)
+                    Toggle("", isOn: settingsBinding(\.pinsWidgetToDesktop))
                         .toggleStyle(.switch)
                         .labelsHidden()
                 }
@@ -157,6 +185,37 @@ struct SettingsPanelView: View {
         }
         .frame(width: 620, height: 720, alignment: .topLeading)
         .background(Color(red: 0.96, green: 0.97, blue: 0.96))
+    }
+
+    private func settingsBinding<Value>(_ keyPath: WritableKeyPath<WidgetSettings, Value>) -> Binding<Value> {
+        Binding(
+            get: { model.settings[keyPath: keyPath] },
+            set: { value in
+                model.updateSettings { settings in
+                    settings[keyPath: keyPath] = value
+                }
+            }
+        )
+    }
+
+    private var launchAtLoginBinding: Binding<Bool> {
+        Binding(
+            get: { model.settings.launchesAtLogin },
+            set: { isEnabled in
+                do {
+                    try LaunchAtLoginController.setEnabled(isEnabled)
+                    launchAtLoginError = nil
+                    model.updateSettings { settings in
+                        settings.launchesAtLogin = LaunchAtLoginController.isEnabled
+                    }
+                } catch {
+                    launchAtLoginError = "无法更新开机启动：\(error.localizedDescription)"
+                    model.updateSettings { settings in
+                        settings.launchesAtLogin = LaunchAtLoginController.isEnabled
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -315,11 +374,12 @@ private struct SettingsPreviewCard: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
+        let previewSnapshot = model.snapshot ?? CodexUsageSnapshot.preview
         VStack(alignment: .leading, spacing: 10) {
             Text("状态栏预览")
                 .font(.system(size: 12, weight: .bold, design: .rounded))
                 .foregroundStyle(Color(nsColor: .secondaryLabelColor))
-            Text(model.menuBarTitle)
+            Text(MenuBarUsageFormatter.format(previewSnapshot, settings: model.settings))
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .monospacedDigit()
         }
@@ -327,6 +387,19 @@ private struct SettingsPreviewCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.white.opacity(0.74), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
+}
+
+private extension CodexUsageSnapshot {
+    static let preview = CodexUsageSnapshot(
+        windows: [
+            UsageWindowSnapshot(kind: .fiveHour, remainingPercentage: 52, resetsIn: 8_820),
+            UsageWindowSnapshot(kind: .sevenDay, remainingPercentage: 42, resetsIn: 345_600),
+        ],
+        planName: "Plus",
+        credits: 0,
+        resetCreditsAvailable: 3,
+        freshness: .live
+    )
 }
 
 private struct DetailPreviewCard: View {

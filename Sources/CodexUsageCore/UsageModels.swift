@@ -171,18 +171,66 @@ public struct WidgetSettings: Codable, Equatable, Sendable {
     public var menuBarDensity: MenuBarDensity
     public var showsCodexPrefix: Bool
     public var pinsWidgetToDesktop: Bool
+    public var showsStatusItem: Bool
+    public var showsDockIcon: Bool
+    public var launchesAtLogin: Bool
 
     public init(
         refreshIntervalMinutes: Int = 5,
         detailLevel: DetailLevel = .rich,
         menuBarDensity: MenuBarDensity = .compact,
         showsCodexPrefix: Bool = false,
-        pinsWidgetToDesktop: Bool = false
+        pinsWidgetToDesktop: Bool = false,
+        showsStatusItem: Bool = true,
+        showsDockIcon: Bool = false,
+        launchesAtLogin: Bool = false
     ) {
         self.refreshIntervalMinutes = refreshIntervalMinutes
         self.detailLevel = detailLevel
         self.menuBarDensity = menuBarDensity
         self.showsCodexPrefix = showsCodexPrefix
         self.pinsWidgetToDesktop = pinsWidgetToDesktop
+        self.showsStatusItem = showsStatusItem
+        self.showsDockIcon = showsDockIcon
+        self.launchesAtLogin = launchesAtLogin
+    }
+
+    public func normalizedForPresentation() -> WidgetSettings {
+        guard needsPresentationNormalization else {
+            return self
+        }
+
+        var settings = self
+        settings.showsDockIcon = true
+        return settings
+    }
+
+    public var needsPresentationNormalization: Bool {
+        !showsStatusItem && !showsDockIcon
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case refreshIntervalMinutes
+        case detailLevel
+        case menuBarDensity
+        case showsCodexPrefix
+        case pinsWidgetToDesktop
+        case showsStatusItem
+        case showsDockIcon
+        case launchesAtLogin
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            refreshIntervalMinutes: try container.decodeIfPresent(Int.self, forKey: .refreshIntervalMinutes) ?? 5,
+            detailLevel: try container.decodeIfPresent(DetailLevel.self, forKey: .detailLevel) ?? .rich,
+            menuBarDensity: try container.decodeIfPresent(MenuBarDensity.self, forKey: .menuBarDensity) ?? .compact,
+            showsCodexPrefix: try container.decodeIfPresent(Bool.self, forKey: .showsCodexPrefix) ?? false,
+            pinsWidgetToDesktop: try container.decodeIfPresent(Bool.self, forKey: .pinsWidgetToDesktop) ?? false,
+            showsStatusItem: try container.decodeIfPresent(Bool.self, forKey: .showsStatusItem) ?? true,
+            showsDockIcon: try container.decodeIfPresent(Bool.self, forKey: .showsDockIcon) ?? false,
+            launchesAtLogin: try container.decodeIfPresent(Bool.self, forKey: .launchesAtLogin) ?? false
+        )
     }
 }

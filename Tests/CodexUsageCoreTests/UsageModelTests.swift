@@ -68,6 +68,86 @@ final class UsageModelTests: XCTestCase {
         XCTAssertEqual(snapshot?.freshness, .live)
     }
 
+    func testWidgetSettingsStorePersistsSettingsToDisk() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let store = WidgetSettingsStore(url: directory.appendingPathComponent("settings.json"))
+        let settings = WidgetSettings(
+            refreshIntervalMinutes: 15,
+            detailLevel: .standard,
+            menuBarDensity: .detailed,
+            showsCodexPrefix: true,
+            pinsWidgetToDesktop: true,
+            showsStatusItem: false,
+            showsDockIcon: true,
+            launchesAtLogin: true
+        )
+
+        store.save(settings)
+
+        XCTAssertEqual(store.load(), settings)
+        try? FileManager.default.removeItem(at: directory)
+    }
+
+    func testWidgetSettingsDecodesOlderSettingsWithPresentationDefaults() throws {
+        let json = """
+        {
+          "refreshIntervalMinutes": 15,
+          "detailLevel": "standard",
+          "menuBarDensity": "detailed",
+          "showsCodexPrefix": true,
+          "pinsWidgetToDesktop": true
+        }
+        """
+
+        let settings = try JSONDecoder().decode(WidgetSettings.self, from: Data(json.utf8))
+
+        XCTAssertTrue(settings.showsStatusItem)
+        XCTAssertFalse(settings.showsDockIcon)
+        XCTAssertFalse(settings.launchesAtLogin)
+    }
+
+    func testWidgetSettingsKeepsDockVisibleWhenStatusItemIsHiddenWithoutDockSetting() {
+        let settings = WidgetSettings(showsStatusItem: false, showsDockIcon: false)
+
+        let normalized = settings.normalizedForPresentation()
+
+        XCTAssertFalse(normalized.showsStatusItem)
+        XCTAssertTrue(normalized.showsDockIcon)
+    }
+
+    func testWidgetSettingsOnlyNeedsPresentationNormalizationWhenBothEntriesAreHidden() {
+        XCTAssertFalse(WidgetSettings(showsStatusItem: true, showsDockIcon: false).needsPresentationNormalization)
+        XCTAssertFalse(WidgetSettings(showsStatusItem: false, showsDockIcon: true).needsPresentationNormalization)
+        XCTAssertTrue(WidgetSettings(showsStatusItem: false, showsDockIcon: false).needsPresentationNormalization)
+    }
+
+    func testWidgetSettingsStoreUsesQuotaBarApplicationSupportDirectory() {
+        let url = WidgetSettingsStore.defaultURL
+
+        XCTAssertEqual(url.deletingLastPathComponent().lastPathComponent, "QuotaBar")
+        XCTAssertEqual(url.lastPathComponent, "settings.json")
+    }
+
+    func testSharedUsageSnapshotStoreUsesQuotaBarApplicationSupportDirectory() {
+        let url = SharedUsageSnapshotStore.snapshotURL
+
+        XCTAssertEqual(url.deletingLastPathComponent().lastPathComponent, "QuotaBar")
+        XCTAssertEqual(url.lastPathComponent, "usage.json")
+    }
+
+    func testWidgetSettingsStoreReturnsNilForInvalidSettingsFile() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = WidgetSettingsStore(url: url)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data("not json".utf8).write(to: url)
+
+        XCTAssertNil(store.load())
+        try? FileManager.default.removeItem(at: directory)
+    }
+
     func testRateLimitMapperUsesCurrentCodexAccountPayload() throws {
         let json = """
         {
@@ -104,5 +184,71 @@ final class UsageModelTests: XCTestCase {
         XCTAssertEqual(snapshot.credits, 0)
         XCTAssertEqual(snapshot.resetCreditsAvailable, 3)
         XCTAssertEqual(snapshot.freshness, .live)
+    }
+
+    func testRateLimitMapperKeepsFiveHourWindowWhenRemainingIsZero() throws {
+        let json = """
+        {
+          "rateLimits": {
+            "limitId": "codex",
+            "primary": {"usedPercent": 100, "windowDurationMins": 300, "resetsAt": 1782970267},
+            "secondary": {"usedPercent": 37, "windowDurationMins": 10080, "resetsAt": 1783475012},
+            "credits": {"hasCredits": false, "unlimited": false, "balance": "0"},
+            "planType": "plus"
+          },
+          "rateLimitResetCredits": {"availableCount": 3}
+        }
+        """
+
+        let snapshot = try XCTUnwrap(CodexRateLimitResponseMapper.map(
+            Data(json.utf8),
+            now: Date(timeIntervalSince1970: 1782960000)
+        ))
+
+        XCTAssertEqual(snapshot.window(.fiveHour)?.remainingPercentage, 0)
+        XCTAssertEqual(snapshot.window(.fiveHour)?.usedPercentage, 100)
+        XCTAssertEqual(snapshot.window(.sevenDay)?.remainingPercentage, 63)
+    }
+
+    func testRateLimitMapperTreatsMissingUsedPercentAsZeroUsage() throws {
+        let json = """
+        {
+          "rateLimits": {
+            "limitId": "codex",
+            "primary": {"windowDurationMins": 300, "resetsAt": 1782970267},
+            "secondary": {"usedPercent": 37, "windowDurationMins": 10080, "resetsAt": 1783475012},
+            "credits": {"hasCredits": false, "unlimited": false, "balance": "0"},
+            "planType": "plus"
+          },
+          "rateLimitResetCredits": {"availableCount": 3}
+        }
+        """
+
+        let snapshot = try XCTUnwrap(CodexRateLimitResponseMapper.map(
+            Data(json.utf8),
+            now: Date(timeIntervalSince1970: 1782960000)
+        ))
+
+        XCTAssertEqual(snapshot.window(.fiveHour)?.remainingPercentage, 100)
+        XCTAssertEqual(snapshot.window(.fiveHour)?.usedPercentage, 0)
+        XCTAssertEqual(snapshot.window(.sevenDay)?.remainingPercentage, 63)
+    }
+
+    func testAppServerProviderExtractsRateLimitSnapshotFromMixedLineOutput() throws {
+        let output = """
+        {"timestamp":"2026-07-02T07:44:30Z","level":"WARN","fields":{"message":"plugin warning"}}
+        {"id":1,"result":{"userAgent":"Codex Desktop"}}
+        {"method":"remoteControl/status/changed","params":{"status":"disabled"}}
+        {"id":2,"result":{"rateLimits":{"limitId":"codex","primary":{"usedPercent":66,"resetsAt":1782992540},"secondary":{"usedPercent":10,"resetsAt":1783579340},"credits":{"balance":"0"},"planType":"plus"},"rateLimitsByLimitId":{"codex":{"limitId":"codex","primary":{"usedPercent":66,"resetsAt":1782992540},"secondary":{"usedPercent":10,"resetsAt":1783579340},"credits":{"balance":"0"},"planType":"plus"}},"rateLimitResetCredits":{"availableCount":2}}}
+        """
+
+        let snapshot = try XCTUnwrap(CodexAppServerUsageProvider.extractRateLimitSnapshot(
+            from: output,
+            now: Date(timeIntervalSince1970: 1_782_970_000)
+        ))
+
+        XCTAssertEqual(snapshot.window(.fiveHour)?.remainingPercentage, 34)
+        XCTAssertEqual(snapshot.window(.sevenDay)?.remainingPercentage, 90)
+        XCTAssertEqual(snapshot.resetCreditsAvailable, 2)
     }
 }

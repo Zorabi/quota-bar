@@ -3,13 +3,16 @@ import Foundation
 public struct CodexAppServerUsageProvider: UsageProviding {
     private let codexExecutablePath: String
     private let timeoutSeconds: Int
+    private let maximumAttempts: Int
 
     public init(
         codexExecutablePath: String = "/Applications/Codex.app/Contents/Resources/codex",
-        timeoutSeconds: Int = 2
+        timeoutSeconds: Int = 10,
+        maximumAttempts: Int = 2
     ) {
         self.codexExecutablePath = codexExecutablePath
         self.timeoutSeconds = timeoutSeconds
+        self.maximumAttempts = max(maximumAttempts, 1)
     }
 
     public func fetchUsage() -> CodexUsageSnapshot? {
@@ -17,8 +20,13 @@ public struct CodexAppServerUsageProvider: UsageProviding {
             return nil
         }
 
-        let output = runAppServerRead()
-        return extractRateLimitSnapshot(from: output)
+        for _ in 0..<maximumAttempts {
+            let output = runAppServerRead()
+            if let snapshot = Self.extractRateLimitSnapshot(from: output) {
+                return snapshot
+            }
+        }
+        return nil
     }
 
     private func runAppServerRead() -> String {
@@ -52,15 +60,16 @@ public struct CodexAppServerUsageProvider: UsageProviding {
         return """
         (
           /usr/bin/printf '%s\\n' \(shellQuote(initialize))
-          /bin/sleep 0.2
+          /bin/sleep 1
           /usr/bin/printf '%s\\n' \(shellQuote(initialized))
+          /bin/sleep 0.5
           /usr/bin/printf '%s\\n' \(shellQuote(read))
           /bin/sleep \(timeoutSeconds)
         ) | \(shellQuote(codexExecutablePath)) app-server --stdio
         """
     }
 
-    private func extractRateLimitSnapshot(from output: String) -> CodexUsageSnapshot? {
+    static func extractRateLimitSnapshot(from output: String, now: Date = Date()) -> CodexUsageSnapshot? {
         for line in output.split(separator: "\n") {
             guard
                 let data = String(line).data(using: .utf8),
@@ -72,7 +81,7 @@ public struct CodexAppServerUsageProvider: UsageProviding {
             else {
                 continue
             }
-            return CodexRateLimitResponseMapper.map(resultData)
+            return CodexRateLimitResponseMapper.map(resultData, now: now)
         }
         return nil
     }

@@ -72,8 +72,6 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   </array>
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
-  <key>LSUIElement</key>
-  <true/>
   <key>NSHumanReadableCopyright</key>
   <string>Copyright © 2026 QuotaBar. All rights reserved.</string>
 </dict>

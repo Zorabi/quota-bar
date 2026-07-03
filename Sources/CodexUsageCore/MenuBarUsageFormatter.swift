@@ -1,7 +1,7 @@
 public enum MenuBarUsageFormatter {
     public static func format(_ snapshot: CodexUsageSnapshot?, settings: WidgetSettings) -> String {
         guard let snapshot else {
-            return "Codex --"
+            return settings.showsCodexPrefix ? "Codex --" : "--"
         }
 
         let fiveHour = snapshot.window(.fiveHour)

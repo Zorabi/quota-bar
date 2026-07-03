@@ -43,7 +43,7 @@ public enum CodexRateLimitResponseMapper {
 
         return UsageWindowSnapshot(
             kind: kind,
-            remainingPercentage: 100 - limitWindow.usedPercent,
+            remainingPercentage: 100 - (limitWindow.usedPercent ?? 0),
             resetsIn: resetsIn,
             resetsAt: limitWindow.resetsAt.map { Date(timeIntervalSince1970: TimeInterval($0)) }
         )
@@ -78,7 +78,7 @@ private struct AppServerRateLimitSnapshot: Decodable {
 }
 
 private struct AppServerRateLimitWindow: Decodable {
-    let usedPercent: Int
+    let usedPercent: Int?
     let resetsAt: Int?
 }
 

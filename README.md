@@ -1,16 +1,17 @@
-# Codex 用量小组件原型
+# QuotaBar
 
-这是一个全新的 macOS 菜单栏与桌面小组件原型，用来查看 Codex 剩余用量。
+QuotaBar 是一个 macOS 菜单栏工具，用来查看当前 Codex 账号剩余用量。
 
 ## 当前能力
 
-- 菜单栏紧凑显示：`5h 52% | 7d 42%`
-- 菜单栏不显示应用图标
-- 桌面浮动小组件显示 5h 主百分比、7d、重置倒计时
-- 菜单栏展开面板显示进度条、套餐、Credits、刷新间隔和信息丰富度
-- 支持刷新间隔：1、5、15、30 分钟
-- 支持菜单栏密度：极简、紧凑、详细
-- 当前使用模拟数据源，不读取 Codex Desktop 私有数据库
+- 状态栏紧凑显示：`5h 52% | 7d 42%`
+- 状态栏默认不显示应用图标，可选择是否显示 `Codex` 前缀
+- 状态栏下拉面板显示 5h、7d、重置时间、Plan、Credits、Reset credits 和刷新状态
+- App 内桌面小组件显示 5h 主百分比、7d、Plan、Credits 和 Reset credits
+- App 内桌面小组件支持显示/隐藏和吸附桌面
+- 设置页支持刷新间隔、信息丰富度、状态栏密度、Codex 前缀、桌面小组件、吸附桌面和退出应用
+- 通过 Codex app-server 只读接口读取真实账号用量
+- 包含实验性 WidgetKit 原生小组件扩展；未签名构建可能无法被 macOS 小组件库收录
 
 ## 运行
 
@@ -22,13 +23,25 @@ swift run CodexUsageWidgetApp
 
 ```bash
 Scripts/build-app.sh
-open .build/CodexUsageWidget.app
+open .build/QuotaBar.app
 ```
+
+构建脚本会生成：
+
+- `.build/QuotaBar.app`
+- `QuotaBar.icns`
+- 嵌入式 `CodexUsageNativeWidgetExtension.appex`
 
 ## 验证
 
 ```bash
 swift test
 swift build
+Scripts/build-app.sh
 ```
 
+## 真实数据来源
+
+QuotaBar 使用 `/Applications/Codex.app/Contents/Resources/codex app-server --stdio` 调用 `account/rateLimits/read`。
+
+它只读取账户额度，不读取 Codex Desktop 私有数据库，不调用额度重置接口，也不修改账号状态。

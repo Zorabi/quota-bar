@@ -7,18 +7,20 @@ final class StatusItemController {
     private let item: NSStatusItem
     private let model: AppModel
     private let desktopWidgetController: DesktopWidgetController
-    private let settingsWindowController: SettingsWindowController
+    private let onOpenSettings: () -> Void
     private let popover = NSPopover()
+    private var outsideClickMonitor: Any?
+    private var currentTitle = ""
     private var cancellables: Set<AnyCancellable> = []
 
     init(
         model: AppModel,
         desktopWidgetController: DesktopWidgetController,
-        settingsWindowController: SettingsWindowController
+        onOpenSettings: @escaping () -> Void
     ) {
         self.model = model
         self.desktopWidgetController = desktopWidgetController
-        self.settingsWindowController = settingsWindowController
+        self.onOpenSettings = onOpenSettings
         self.item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         configure()
     }
@@ -45,14 +47,39 @@ final class StatusItemController {
             DispatchQueue.main.async { self?.updateTitle() }
         }.store(in: &cancellables)
         model.$settings.sink { [weak self] _ in
-            DispatchQueue.main.async { self?.updateTitle() }
-            DispatchQueue.main.async { self?.desktopWidgetController.applySettings(self?.model.settings) }
+            DispatchQueue.main.async { self?.applySettings() }
         }.store(in: &cancellables)
-        updateTitle()
+        NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)
+            .sink { [weak self] _ in
+                DispatchQueue.main.async { self?.closePopover(nil) }
+            }
+            .store(in: &cancellables)
+        applySettings()
+    }
+
+    private func applySettings() {
+        if !model.settings.showsStatusItem {
+            closePopover(nil)
+        }
+
+        item.isVisible = true
+        if model.settings.showsStatusItem {
+            item.length = NSStatusItem.variableLength
+            updateTitle()
+        } else {
+            item.button?.title = ""
+            item.length = 0
+        }
+        desktopWidgetController.applySettings(model.settings)
     }
 
     private func updateTitle() {
-        item.button?.title = model.menuBarTitle
+        let title = model.menuBarTitle
+        guard title != currentTitle else {
+            return
+        }
+        currentTitle = title
+        item.button?.title = title
     }
 
     @objc private func togglePopover(_ sender: AnyObject?) {
@@ -61,10 +88,42 @@ final class StatusItemController {
         }
 
         if popover.isShown {
-            popover.performClose(sender)
+            closePopover(sender)
         } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            showPopover(relativeTo: button)
         }
+    }
+
+    private func showPopover(relativeTo button: NSStatusBarButton) {
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        NSApp.activate(ignoringOtherApps: true)
+        startOutsideClickMonitor()
+    }
+
+    private func closePopover(_ sender: Any?) {
+        stopOutsideClickMonitor()
+        popover.performClose(sender)
+    }
+
+    private func startOutsideClickMonitor() {
+        guard outsideClickMonitor == nil else {
+            return
+        }
+
+        outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            Task { @MainActor in
+                self?.closePopover(nil)
+            }
+        }
+    }
+
+    private func stopOutsideClickMonitor() {
+        guard let outsideClickMonitor else {
+            return
+        }
+
+        NSEvent.removeMonitor(outsideClickMonitor)
+        self.outsideClickMonitor = nil
     }
 
     private func toggleWidget() {
@@ -72,9 +131,7 @@ final class StatusItemController {
     }
 
     private func openSettings() {
-        popover.performClose(nil)
-        settingsWindowController.show(model: model) { [weak self] in
-            self?.toggleWidget()
-        }
+        closePopover(nil)
+        onOpenSettings()
     }
 }

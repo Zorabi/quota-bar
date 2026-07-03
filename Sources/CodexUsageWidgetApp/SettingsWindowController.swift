@@ -2,10 +2,20 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class SettingsWindowController {
+final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
+    private var onClose: () -> Void = {}
 
-    func show(model: AppModel, onToggleWidget: @escaping () -> Void = {}) {
+    var isVisible: Bool {
+        window?.isVisible == true
+    }
+
+    func show(
+        model: AppModel,
+        onToggleWidget: @escaping () -> Void = {},
+        onClose: @escaping () -> Void = {}
+    ) {
+        self.onClose = onClose
         if let window {
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
@@ -20,11 +30,16 @@ final class SettingsWindowController {
         )
         window.center()
         window.contentView = NSHostingView(rootView: SettingsPanelView(model: model, onToggleWidget: onToggleWidget))
+        window.delegate = self
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 620, height: 560)
         window.title = "QuotaBar 设置"
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         self.window = window
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        onClose()
     }
 }

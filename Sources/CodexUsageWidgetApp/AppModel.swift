@@ -7,24 +7,36 @@ final class AppModel: ObservableObject {
     @Published private(set) var lastRefreshedAt: Date?
     @Published private(set) var nextRefreshAt: Date?
     @Published private(set) var isRefreshing = false
-    @Published var settings: WidgetSettings {
+    @Published private(set) var settings: WidgetSettings {
         didSet {
+            settingsStore.save(settings)
             restartTimer()
         }
     }
 
     private let provider: UsageProviding
+    private let settingsStore: WidgetSettingsStore
     private var timer: Timer?
 
-    init(provider: UsageProviding = MockUsageProvider()) {
+    init(
+        provider: UsageProviding = MockUsageProvider(),
+        settingsStore: WidgetSettingsStore = WidgetSettingsStore()
+    ) {
         self.provider = provider
-        self.settings = WidgetSettings()
+        self.settingsStore = settingsStore
+        self.settings = (settingsStore.load() ?? WidgetSettings()).normalizedForPresentation()
         self.snapshot = nil
         refresh()
     }
 
     var menuBarTitle: String {
         MenuBarUsageFormatter.format(snapshot, settings: settings)
+    }
+
+    func updateSettings(_ update: (inout WidgetSettings) -> Void) {
+        var nextSettings = settings
+        update(&nextSettings)
+        settings = nextSettings.normalizedForPresentation()
     }
 
     func refresh() {

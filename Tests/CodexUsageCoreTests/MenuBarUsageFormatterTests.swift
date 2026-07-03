@@ -61,11 +61,22 @@ final class MenuBarUsageFormatterTests: XCTestCase {
         XCTAssertEqual(MenuBarUsageFormatter.format(snapshot, settings: settings), "5h 52% | 7d 42% | 02:27")
     }
 
-    func testUnavailableSnapshotShowsCodexPlaceholder() {
+    func testUnavailableSnapshotHidesCodexPlaceholderWhenPrefixIsOff() {
         let settings = WidgetSettings(
             refreshIntervalMinutes: 5,
             detailLevel: .standard,
             menuBarDensity: .compact
+        )
+
+        XCTAssertEqual(MenuBarUsageFormatter.format(nil, settings: settings), "--")
+    }
+
+    func testUnavailableSnapshotCanShowCodexPlaceholderWhenPrefixIsOn() {
+        let settings = WidgetSettings(
+            refreshIntervalMinutes: 5,
+            detailLevel: .standard,
+            menuBarDensity: .compact,
+            showsCodexPrefix: true
         )
 
         XCTAssertEqual(MenuBarUsageFormatter.format(nil, settings: settings), "Codex --")
