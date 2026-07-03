@@ -304,6 +304,32 @@ final class UsageModelTests: XCTestCase {
         try? FileManager.default.removeItem(at: directory)
     }
 
+    func testResetCreditExpiryDisplayFormatterUsesLocalDateAndClockText() {
+        let date = parseISO8601Date("2026-07-26T23:26:04.000Z")
+        let fetchedAt = Date(timeIntervalSince1970: 1_783_080_120)
+        let timeZone = TimeZone(secondsFromGMT: 8 * 3600)!
+
+        XCTAssertEqual(
+            ResetCreditExpiryDisplayFormatter.expirationText(date, timeZone: timeZone),
+            "2026-07-27 07:26:04"
+        )
+        XCTAssertEqual(
+            ResetCreditExpiryDisplayFormatter.fetchedAtText(fetchedAt, timeZone: timeZone),
+            RefreshScheduleFormatter.clockText(fetchedAt, timeZone: timeZone)
+        )
+    }
+
+    func testResetCreditExpiryDisplayFormatterShowsSafeErrorText() {
+        XCTAssertEqual(
+            ResetCreditExpiryDisplayFormatter.errorText(.missingAuthFile),
+            "无法查询过期时间，请确认 Codex 已登录。"
+        )
+        XCTAssertEqual(
+            ResetCreditExpiryDisplayFormatter.errorText(.requestFailed("HTTP 401")),
+            "无法查询过期时间：HTTP 401"
+        )
+    }
+
     private func parseISO8601Date(_ value: String) -> Date {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]

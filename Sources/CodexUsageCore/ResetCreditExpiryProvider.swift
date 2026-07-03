@@ -128,6 +128,29 @@ public enum ResetCreditExpiryResponseMapper {
     }
 }
 
+public enum ResetCreditExpiryDisplayFormatter {
+    public static func expirationText(_ date: Date, timeZone: TimeZone = .current) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = timeZone
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        return formatter.string(from: date)
+    }
+
+    public static func fetchedAtText(_ date: Date, timeZone: TimeZone = .current) -> String {
+        RefreshScheduleFormatter.clockText(date, timeZone: timeZone)
+    }
+
+    public static func errorText(_ error: ResetCreditExpiryQueryError) -> String {
+        switch error {
+        case .missingAuthFile, .missingAccessToken, .invalidResponse:
+            return "无法查询过期时间，请确认 Codex 已登录。"
+        case .requestFailed(let reason):
+            return "无法查询过期时间：\(reason)"
+        }
+    }
+}
+
 private struct WhamResetCreditResponse: Decodable {
     let availableCount: Int
     let credits: [WhamResetCredit]
