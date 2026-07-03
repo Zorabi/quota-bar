@@ -76,6 +76,7 @@ final class UsageModelTests: XCTestCase {
             refreshIntervalMinutes: 15,
             detailLevel: .standard,
             menuBarDensity: .detailed,
+            appearanceMode: .dark,
             showsCodexPrefix: true,
             pinsWidgetToDesktop: true,
             showsStatusItem: false,
@@ -105,6 +106,13 @@ final class UsageModelTests: XCTestCase {
         XCTAssertTrue(settings.showsStatusItem)
         XCTAssertFalse(settings.showsDockIcon)
         XCTAssertFalse(settings.launchesAtLogin)
+        XCTAssertEqual(settings.appearanceMode, .system)
+    }
+
+    func testAppearanceModeProvidesChineseDisplayText() {
+        XCTAssertEqual(AppearanceMode.system.displayText, "系统")
+        XCTAssertEqual(AppearanceMode.dark.displayText, "深色")
+        XCTAssertEqual(AppearanceMode.light.displayText, "浅色")
     }
 
     func testWidgetSettingsKeepsDockVisibleWhenStatusItemIsHiddenWithoutDockSetting() {

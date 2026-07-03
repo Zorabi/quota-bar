@@ -62,6 +62,7 @@ final class StatusItemController {
             closePopover(nil)
         }
 
+        popover.appearance = model.settings.appearanceMode.nsAppearance
         item.isVisible = true
         if model.settings.showsStatusItem {
             item.length = NSStatusItem.variableLength

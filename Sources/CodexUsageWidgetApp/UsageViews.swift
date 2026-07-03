@@ -2,6 +2,14 @@ import AppKit
 import CodexUsageCore
 import SwiftUI
 
+private extension Color {
+    static var quotaAccent: Color { Color(red: 0.19, green: 0.66, blue: 0.30) }
+    static var quotaPrimaryText: Color { Color(nsColor: .labelColor) }
+    static var quotaSecondaryText: Color { Color(nsColor: .secondaryLabelColor) }
+    static var quotaPanelBackground: Color { Color(nsColor: .windowBackgroundColor) }
+    static var quotaCardBackground: Color { Color(nsColor: .controlBackgroundColor) }
+}
+
 struct MenuBarLabel: View {
     @ObservedObject var model: AppModel
 
@@ -46,19 +54,8 @@ struct StatusPopoverView: View {
         }
         .padding(16)
         .frame(width: 356)
-        .background(
-            ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.98, green: 0.99, blue: 0.98),
-                        Color(red: 0.92, green: 0.95, blue: 0.94),
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                Color.white.opacity(0.34)
-            }
-        )
+        .background(Color.quotaPanelBackground)
+        .preferredColorScheme(model.settings.appearanceMode.colorScheme)
     }
 }
 
@@ -85,6 +82,17 @@ struct SettingsPanelView: View {
 
                 RefreshStatusStrip(model: model)
                 SettingsActionStrip(model: model)
+
+                SettingsRow(title: "外观", detail: "跟随系统，或固定使用深色、浅色") {
+                    Picker("", selection: settingsBinding(\.appearanceMode)) {
+                        ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                            Text(mode.displayText).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(width: 230)
+                }
 
                 SettingsRow(title: "刷新间隔", detail: "多久重新读取一次当前账号用量") {
                     Picker("", selection: settingsBinding(\.refreshIntervalMinutes)) {
@@ -184,7 +192,8 @@ struct SettingsPanelView: View {
             .padding(24)
         }
         .frame(width: 620, height: 720, alignment: .topLeading)
-        .background(Color(red: 0.96, green: 0.97, blue: 0.96))
+        .background(Color.quotaPanelBackground)
+        .preferredColorScheme(model.settings.appearanceMode.colorScheme)
     }
 
     private func settingsBinding<Value>(_ keyPath: WritableKeyPath<WidgetSettings, Value>) -> Binding<Value> {
@@ -237,11 +246,11 @@ struct DesktopWidgetView: View {
         .padding(20)
         .frame(width: 376)
         .fixedSize(horizontal: false, vertical: true)
-        .foregroundStyle(Color(red: 0.16, green: 0.18, blue: 0.18))
+        .foregroundStyle(Color.quotaPrimaryText)
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(Color(red: 0.96, green: 0.98, blue: 0.97).opacity(0.97))
+                    .fill(Color.quotaPanelBackground.opacity(0.97))
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(.regularMaterial)
                     .opacity(0.22)
@@ -249,8 +258,9 @@ struct DesktopWidgetView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.55), lineWidth: 1)
+                .stroke(Color.quotaCardBackground.opacity(0.55), lineWidth: 1)
         )
+        .preferredColorScheme(model.settings.appearanceMode.colorScheme)
     }
 }
 
@@ -264,7 +274,7 @@ private struct HeaderStrip: View {
                     .font(.system(size: 18, weight: .bold, design: .rounded))
                 Text(model.snapshot == nil ? "Codex 用量未连接" : "Codex 用量 · 只读")
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.42, green: 0.48, blue: 0.46))
+                    .foregroundStyle(Color.quotaSecondaryText)
             }
             Spacer()
             FreshnessBadge(snapshot: model.snapshot)
@@ -281,10 +291,10 @@ private struct PrimaryUsageBlock: View {
             Text(primary.map { "\($0.remainingPercentage)%" } ?? "--")
                 .font(.system(size: 46, weight: .bold, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(Color(red: 0.13, green: 0.52, blue: 0.23))
+                .foregroundStyle(Color.quotaAccent)
             Text("5h remaining")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(red: 0.25, green: 0.29, blue: 0.28))
+                .foregroundStyle(Color.quotaPrimaryText)
             Spacer()
         }
     }
@@ -300,7 +310,7 @@ private struct WindowBars: View {
             UsageBar(window: snapshot.window(.sevenDay), resetStyle: resetStyle)
         }
         .padding(12)
-        .background(Color.white.opacity(0.58), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Color.quotaCardBackground.opacity(0.72), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -317,11 +327,11 @@ private struct UsageBar: View {
                 Text(window.map { "\($0.remainingPercentage)% remaining" } ?? "--")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(Color(red: 0.13, green: 0.52, blue: 0.23))
+                    .foregroundStyle(Color.quotaAccent)
             }
 
             ProgressView(value: Double(window?.remainingPercentage ?? 0), total: 100)
-                .tint(Color(red: 0.16, green: 0.56, blue: 0.25))
+                .tint(Color.quotaAccent)
 
             HStack {
                 Text("\(window?.usedPercentage ?? 0)% used")
@@ -338,7 +348,7 @@ private struct UsageBar: View {
                 }
             }
             .font(.system(size: 11, weight: .medium, design: .rounded))
-            .foregroundStyle(Color(red: 0.43, green: 0.49, blue: 0.47))
+            .foregroundStyle(Color.quotaSecondaryText)
             .monospacedDigit()
         }
     }
@@ -385,7 +395,7 @@ private struct SettingsPreviewCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.74), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Color.quotaCardBackground.opacity(0.82), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -414,7 +424,7 @@ private struct DetailPreviewCard: View {
                 Spacer()
                 Text(model.settings.detailLevel.displayText)
                     .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.13, green: 0.52, blue: 0.23))
+                    .foregroundStyle(Color.quotaAccent)
             }
 
             if let snapshot = model.snapshot {
@@ -435,7 +445,7 @@ private struct DetailPreviewCard: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.60), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Color.quotaCardBackground.opacity(0.76), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -455,11 +465,11 @@ private struct SettingsActionStrip: View {
 
             Text(model.snapshot == nil ? "当前未连接" : "已连接当前账号")
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(model.snapshot == nil ? .orange : .green)
+                .foregroundStyle(model.snapshot == nil ? .orange : Color.quotaAccent)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.58), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Color.quotaCardBackground.opacity(0.76), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -482,7 +492,7 @@ private struct ExitAppSection: View {
             .tint(.red)
         }
         .padding(14)
-        .background(Color.red.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
@@ -494,20 +504,20 @@ private struct RefreshStatusStrip: View {
             HStack(alignment: .center, spacing: 10) {
                 ZStack {
                     Circle()
-                        .fill(Color(red: 0.13, green: 0.52, blue: 0.23).opacity(0.12))
+                        .fill(Color.quotaAccent.opacity(0.16))
                     Image(systemName: model.isRefreshing ? "arrow.triangle.2.circlepath" : "clock")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(Color(red: 0.13, green: 0.52, blue: 0.23))
+                        .foregroundStyle(Color.quotaAccent)
                 }
                 .frame(width: 30, height: 30)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.isRefreshing ? "正在刷新" : "自动刷新")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color(red: 0.24, green: 0.29, blue: 0.27))
+                        .foregroundStyle(Color.quotaPrimaryText)
                     Text("每 \(model.settings.refreshIntervalMinutes) 分钟")
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color(red: 0.43, green: 0.49, blue: 0.47))
+                        .foregroundStyle(Color.quotaSecondaryText)
                 }
 
                 Spacer(minLength: 8)
@@ -515,18 +525,18 @@ private struct RefreshStatusStrip: View {
                 VStack(alignment: .trailing, spacing: 3) {
                     Text(model.isRefreshing ? "读取中" : "距下次 \(RefreshScheduleFormatter.remainingText(until: model.nextRefreshAt, now: timeline.date))")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color(red: 0.13, green: 0.52, blue: 0.23))
+                        .foregroundStyle(Color.quotaAccent)
                         .lineLimit(1)
                         .minimumScaleFactor(0.82)
                     Text("上次 \(RefreshScheduleFormatter.clockText(model.lastRefreshedAt))")
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color(red: 0.43, green: 0.49, blue: 0.47))
+                        .foregroundStyle(Color.quotaSecondaryText)
                         .monospacedDigit()
                 }
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.white.opacity(0.58), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Color.quotaCardBackground.opacity(0.76), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
     }
 }
@@ -551,7 +561,7 @@ private struct SettingsRow<Control: View>: View {
             control
         }
         .padding(14)
-        .background(Color.white.opacity(0.58), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(Color.quotaCardBackground.opacity(0.76), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
@@ -657,18 +667,18 @@ private struct CompactActionButtonStyle: ButtonStyle {
     }
 
     private var foregroundColor: Color {
-        prominence == .primary ? .white : Color(red: 0.20, green: 0.24, blue: 0.23)
+        prominence == .primary ? .white : Color.quotaPrimaryText
     }
 
     private func backgroundColor(configuration: Configuration) -> Color {
         if prominence == .primary {
-            return configuration.isPressed ? Color(red: 0.10, green: 0.42, blue: 0.19) : Color(red: 0.13, green: 0.52, blue: 0.23)
+            return configuration.isPressed ? Color.quotaAccent.opacity(0.78) : Color.quotaAccent
         }
-        return configuration.isPressed ? Color(red: 0.85, green: 0.95, blue: 0.88) : Color.white.opacity(0.62)
+        return configuration.isPressed ? Color.quotaAccent.opacity(0.18) : Color.quotaCardBackground.opacity(0.78)
     }
 
     private func borderColor(configuration: Configuration) -> Color {
-        configuration.isPressed ? Color(red: 0.13, green: 0.52, blue: 0.23).opacity(0.28) : Color.white.opacity(0.24)
+        configuration.isPressed ? Color.quotaAccent.opacity(0.28) : Color.quotaSecondaryText.opacity(0.18)
     }
 }
 
@@ -679,7 +689,7 @@ private struct UnavailableBlock: View {
                 .font(.system(size: 24, weight: .bold, design: .rounded))
             Text("无法从 Codex app-server 读取只读额度接口。请确认 Codex 已登录，然后点击刷新。")
                 .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(Color(red: 0.43, green: 0.49, blue: 0.47))
+                .foregroundStyle(Color.quotaSecondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
@@ -694,10 +704,10 @@ private struct FreshnessBadge: View {
     var body: some View {
         Text(snapshot?.freshness.displayText ?? "不可用")
             .font(.system(size: 11, weight: .bold, design: .rounded))
-            .foregroundStyle(snapshot == nil ? Color.orange : Color(red: 0.13, green: 0.52, blue: 0.23))
+            .foregroundStyle(snapshot == nil ? Color.orange : Color.quotaAccent)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background((snapshot == nil ? Color.orange : Color.green).opacity(0.14), in: Capsule())
+            .background((snapshot == nil ? Color.orange : Color.quotaAccent).opacity(0.16), in: Capsule())
     }
 }
 
@@ -709,7 +719,7 @@ private struct MiniMetric: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color(red: 0.43, green: 0.49, blue: 0.47))
+                .foregroundStyle(Color.quotaSecondaryText)
             Text(value)
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .monospacedDigit()
@@ -728,7 +738,7 @@ private struct InfoTile: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(Color(red: 0.43, green: 0.49, blue: 0.47))
+                .foregroundStyle(Color.quotaSecondaryText)
             Text(value)
                 .font(.system(size: 16, weight: .bold, design: .rounded))
                 .monospacedDigit()
@@ -737,6 +747,6 @@ private struct InfoTile: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(Color.white.opacity(0.56), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(Color.quotaCardBackground.opacity(0.74), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import CodexUsageCore
 import SwiftUI
 
@@ -27,10 +28,15 @@ final class AppCoordinator: NSObject, NSApplicationDelegate {
     private let desktopWidgetController = DesktopWidgetController()
     private let settingsWindowController = SettingsWindowController()
     private var statusItemController: StatusItemController?
+    private var cancellables: Set<AnyCancellable> = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         syncLaunchAtLoginStatus()
+        applyAppearance(model.settings)
         applyActivationPolicy(model.settings)
+        model.$settings.sink { [weak self] settings in
+            self?.applyAppearance(settings)
+        }.store(in: &cancellables)
         statusItemController = StatusItemController(
             model: model,
             desktopWidgetController: desktopWidgetController,
@@ -78,6 +84,10 @@ final class AppCoordinator: NSObject, NSApplicationDelegate {
         if policy == .regular {
             NSApp.activate(ignoringOtherApps: true)
         }
+    }
+
+    private func applyAppearance(_ settings: WidgetSettings) {
+        NSApp.appearance = settings.appearanceMode.nsAppearance
     }
 
 }

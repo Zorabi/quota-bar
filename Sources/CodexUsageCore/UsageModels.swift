@@ -165,10 +165,28 @@ public enum MenuBarDensity: String, CaseIterable, Codable, Sendable {
     }
 }
 
+public enum AppearanceMode: String, CaseIterable, Codable, Sendable {
+    case system
+    case dark
+    case light
+
+    public var displayText: String {
+        switch self {
+        case .system:
+            return "系统"
+        case .dark:
+            return "深色"
+        case .light:
+            return "浅色"
+        }
+    }
+}
+
 public struct WidgetSettings: Codable, Equatable, Sendable {
     public var refreshIntervalMinutes: Int
     public var detailLevel: DetailLevel
     public var menuBarDensity: MenuBarDensity
+    public var appearanceMode: AppearanceMode
     public var showsCodexPrefix: Bool
     public var pinsWidgetToDesktop: Bool
     public var showsStatusItem: Bool
@@ -179,6 +197,7 @@ public struct WidgetSettings: Codable, Equatable, Sendable {
         refreshIntervalMinutes: Int = 5,
         detailLevel: DetailLevel = .rich,
         menuBarDensity: MenuBarDensity = .compact,
+        appearanceMode: AppearanceMode = .system,
         showsCodexPrefix: Bool = false,
         pinsWidgetToDesktop: Bool = false,
         showsStatusItem: Bool = true,
@@ -188,6 +207,7 @@ public struct WidgetSettings: Codable, Equatable, Sendable {
         self.refreshIntervalMinutes = refreshIntervalMinutes
         self.detailLevel = detailLevel
         self.menuBarDensity = menuBarDensity
+        self.appearanceMode = appearanceMode
         self.showsCodexPrefix = showsCodexPrefix
         self.pinsWidgetToDesktop = pinsWidgetToDesktop
         self.showsStatusItem = showsStatusItem
@@ -213,6 +233,7 @@ public struct WidgetSettings: Codable, Equatable, Sendable {
         case refreshIntervalMinutes
         case detailLevel
         case menuBarDensity
+        case appearanceMode
         case showsCodexPrefix
         case pinsWidgetToDesktop
         case showsStatusItem
@@ -226,6 +247,7 @@ public struct WidgetSettings: Codable, Equatable, Sendable {
             refreshIntervalMinutes: try container.decodeIfPresent(Int.self, forKey: .refreshIntervalMinutes) ?? 5,
             detailLevel: try container.decodeIfPresent(DetailLevel.self, forKey: .detailLevel) ?? .rich,
             menuBarDensity: try container.decodeIfPresent(MenuBarDensity.self, forKey: .menuBarDensity) ?? .compact,
+            appearanceMode: try container.decodeIfPresent(AppearanceMode.self, forKey: .appearanceMode) ?? .system,
             showsCodexPrefix: try container.decodeIfPresent(Bool.self, forKey: .showsCodexPrefix) ?? false,
             pinsWidgetToDesktop: try container.decodeIfPresent(Bool.self, forKey: .pinsWidgetToDesktop) ?? false,
             showsStatusItem: try container.decodeIfPresent(Bool.self, forKey: .showsStatusItem) ?? true,

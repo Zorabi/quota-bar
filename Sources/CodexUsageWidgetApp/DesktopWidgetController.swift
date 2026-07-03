@@ -15,6 +15,7 @@ final class DesktopWidgetController {
     func show(model: AppModel) {
         if let panel {
             configureLevel(panel, settings: model.settings)
+            panel.appearance = model.settings.appearanceMode.nsAppearance
             if let hostingView {
                 resizePanel(panel, toFit: hostingView)
             }
@@ -37,6 +38,7 @@ final class DesktopWidgetController {
         panel.hasShadow = true
         panel.isMovableByWindowBackground = true
         panel.isOpaque = false
+        panel.appearance = model.settings.appearanceMode.nsAppearance
         configureLevel(panel, settings: model.settings)
         resizeObservation = model.$snapshot
             .combineLatest(model.$settings)
@@ -74,6 +76,7 @@ final class DesktopWidgetController {
         guard let panel, let settings else {
             return
         }
+        panel.appearance = settings.appearanceMode.nsAppearance
         configureLevel(panel, settings: settings)
     }
 

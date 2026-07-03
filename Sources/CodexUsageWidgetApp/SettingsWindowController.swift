@@ -1,9 +1,11 @@
 import AppKit
+import Combine
 import SwiftUI
 
 @MainActor
 final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
+    private var settingsObservation: AnyCancellable?
     private var onClose: () -> Void = {}
 
     var isVisible: Bool {
@@ -17,6 +19,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     ) {
         self.onClose = onClose
         if let window {
+            window.appearance = model.settings.appearanceMode.nsAppearance
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
@@ -30,10 +33,14 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         )
         window.center()
         window.contentView = NSHostingView(rootView: SettingsPanelView(model: model, onToggleWidget: onToggleWidget))
+        window.appearance = model.settings.appearanceMode.nsAppearance
         window.delegate = self
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 620, height: 560)
         window.title = "QuotaBar 设置"
+        settingsObservation = model.$settings.sink { [weak window] settings in
+            window?.appearance = settings.appearanceMode.nsAppearance
+        }
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         self.window = window
