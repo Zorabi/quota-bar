@@ -259,4 +259,54 @@ final class UsageModelTests: XCTestCase {
         XCTAssertEqual(snapshot.window(.sevenDay)?.remainingPercentage, 90)
         XCTAssertEqual(snapshot.resetCreditsAvailable, 2)
     }
+
+    func testResetCreditExpiryMapperParsesWhamPayload() throws {
+        let json = """
+        {
+          "available_count": 2,
+          "credits": [
+            {"expires_at": "2026-08-01T19:02:09.000Z"},
+            {"expires_at": "2026-07-26T23:26:04.000Z"}
+          ]
+        }
+        """
+
+        let snapshot = try ResetCreditExpiryResponseMapper.map(
+            Data(json.utf8),
+            fetchedAt: Date(timeIntervalSince1970: 1_783_080_000)
+        )
+
+        XCTAssertEqual(snapshot.availableCount, 2)
+        XCTAssertEqual(snapshot.expirations, [
+            parseISO8601Date("2026-07-26T23:26:04.000Z"),
+            parseISO8601Date("2026-08-01T19:02:09.000Z"),
+        ])
+        XCTAssertEqual(snapshot.fetchedAt, Date(timeIntervalSince1970: 1_783_080_000))
+    }
+
+    func testResetCreditExpiryMapperRejectsInvalidJSON() {
+        XCTAssertThrowsError(try ResetCreditExpiryResponseMapper.map(Data("not json".utf8))) { error in
+            XCTAssertEqual(error as? ResetCreditExpiryQueryError, .invalidResponse)
+        }
+    }
+
+    func testResetCreditExpiryProviderReportsMissingToken() {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let authURL = directory.appendingPathComponent("auth.json")
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try? Data(#"{"tokens":{}}"#.utf8).write(to: authURL)
+
+        let provider = ResetCreditExpiryProvider(authFileURL: authURL)
+        let result = provider.fetchExpirySnapshot()
+
+        XCTAssertEqual(result, .failure(.missingAccessToken))
+        try? FileManager.default.removeItem(at: directory)
+    }
+
+    private func parseISO8601Date(_ value: String) -> Date {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.date(from: value)!
+    }
 }
