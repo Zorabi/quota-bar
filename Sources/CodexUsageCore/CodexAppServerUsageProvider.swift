@@ -6,13 +6,22 @@ public struct CodexAppServerUsageProvider: UsageProviding {
     private let maximumAttempts: Int
 
     public init(
-        codexExecutablePath: String = "/Applications/Codex.app/Contents/Resources/codex",
+        codexExecutablePath: String? = nil,
         timeoutSeconds: Int = 10,
         maximumAttempts: Int = 2
     ) {
         self.codexExecutablePath = codexExecutablePath
+            ?? Self.resolveCodexExecutablePath(from: Self.defaultCodexExecutablePaths)
+            ?? Self.defaultCodexExecutablePaths[0]
         self.timeoutSeconds = timeoutSeconds
         self.maximumAttempts = max(maximumAttempts, 1)
+    }
+
+    static func resolveCodexExecutablePath(
+        from candidates: [String],
+        isExecutable: (String) -> Bool = FileManager.default.isExecutableFile(atPath:)
+    ) -> String? {
+        candidates.first(where: isExecutable)
     }
 
     public func fetchUsage() -> CodexUsageSnapshot? {
@@ -88,5 +97,16 @@ public struct CodexAppServerUsageProvider: UsageProviding {
 
     private func shellQuote(_ value: String) -> String {
         "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
+    }
+
+    private static var defaultCodexExecutablePaths: [String] {
+        let userApplications = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Applications", isDirectory: true).path
+        return [
+            "/Applications/ChatGPT.app/Contents/Resources/codex",
+            "\(userApplications)/ChatGPT.app/Contents/Resources/codex",
+            "/Applications/Codex.app/Contents/Resources/codex",
+            "\(userApplications)/Codex.app/Contents/Resources/codex",
+        ]
     }
 }

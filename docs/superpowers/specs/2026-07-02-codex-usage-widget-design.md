@@ -26,7 +26,8 @@ QuotaBar 是一个 macOS 菜单栏工具，用来查看当前 Codex 账号的剩
 
 当前实现通过 Codex app-server 的只读接口读取用量：
 
-- 启动 `/Applications/Codex.app/Contents/Resources/codex app-server --stdio`
+- 自动查找 ChatGPT 新版与 Codex 旧版 App 内的 `codex` 可执行文件，兼容系统级和用户级 `Applications` 目录
+- 启动已找到的 `codex app-server --stdio`
 - 调用 `account/rateLimits/read`
 - 解析 `primary`、`secondary`、`credits`、`planType` 和 `rateLimitResetCredits.availableCount`
 - 单次读取允许等待 app-server 初始化、插件和模型状态刷新；默认最多尝试 2 次，每次读取窗口 10 秒，避免 Codex app-server 偶发启动慢导致只收到初始化响应。

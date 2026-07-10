@@ -42,6 +42,6 @@ Scripts/build-app.sh
 
 ## 真实数据来源
 
-QuotaBar 使用 `/Applications/Codex.app/Contents/Resources/codex app-server --stdio` 调用 `account/rateLimits/read`。
+QuotaBar 会自动查找 ChatGPT 新版与 Codex 旧版 App 内的 `codex` 可执行文件，再通过 `app-server --stdio` 调用 `account/rateLimits/read`。系统级和用户级 `Applications` 目录均受支持。
 
 它只读取账户额度，不读取 Codex Desktop 私有数据库，不调用额度重置接口，也不修改账号状态。

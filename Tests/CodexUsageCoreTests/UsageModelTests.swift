@@ -260,6 +260,30 @@ final class UsageModelTests: XCTestCase {
         XCTAssertEqual(snapshot.resetCreditsAvailable, 2)
     }
 
+    func testAppServerProviderFindsExecutableInUpdatedChatGPTApp() {
+        let chatGPTPath = "/Applications/ChatGPT.app/Contents/Resources/codex"
+        let legacyCodexPath = "/Applications/Codex.app/Contents/Resources/codex"
+
+        let resolvedPath = CodexAppServerUsageProvider.resolveCodexExecutablePath(
+            from: [chatGPTPath, legacyCodexPath],
+            isExecutable: { $0 == chatGPTPath }
+        )
+
+        XCTAssertEqual(resolvedPath, chatGPTPath)
+    }
+
+    func testAppServerProviderFallsBackToLegacyCodexApp() {
+        let chatGPTPath = "/Applications/ChatGPT.app/Contents/Resources/codex"
+        let legacyCodexPath = "/Applications/Codex.app/Contents/Resources/codex"
+
+        let resolvedPath = CodexAppServerUsageProvider.resolveCodexExecutablePath(
+            from: [chatGPTPath, legacyCodexPath],
+            isExecutable: { $0 == legacyCodexPath }
+        )
+
+        XCTAssertEqual(resolvedPath, legacyCodexPath)
+    }
+
     func testResetCreditExpiryMapperParsesWhamPayload() throws {
         let json = """
         {

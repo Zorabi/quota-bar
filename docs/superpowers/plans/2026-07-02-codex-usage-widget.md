@@ -287,6 +287,24 @@ docs/
 - [x] **Step 7: 用真实 Codex app-server 验证 10 秒读取窗口能拿到 `id:2` 用量响应**
 - [x] **Step 8: 运行 `swift test`、`swift build`、`Scripts/build-app.sh`，并确认打包产物不含 `LSUIElement`**
 
+## Task 13: 兼容 ChatGPT 更新后的 Codex 可执行文件路径
+
+**Files:**
+- `Sources/CodexUsageCore/CodexAppServerUsageProvider.swift`
+- `Tests/CodexUsageCoreTests/UsageModelTests.swift`
+- `README.md`
+- `docs/superpowers/specs/2026-07-02-codex-usage-widget-design.md`
+
+**Interfaces:**
+- Produces: `CodexAppServerUsageProvider.resolveCodexExecutablePath(from:isExecutable:)`。
+- Produces: 自动发现 ChatGPT 新版与 Codex 旧版 App 内 `codex` 可执行文件的默认初始化行为。
+
+- [x] **Step 1: 复现新版 ChatGPT 安装后旧版硬编码路径不存在，导致用量读取直接返回不可用**
+- [x] **Step 2: 写失败测试，验证优先发现 ChatGPT 新路径，并在需要时回退 Codex 旧路径**
+- [x] **Step 3: 实现系统级和用户级 `Applications` 目录的兼容路径发现**
+- [x] **Step 4: 使用新版 ChatGPT 内的真实 app-server 验证 `account/rateLimits/read` 仍返回当前额度**
+- [x] **Step 5: 运行完整验证**
+
 ## Verification
 
 已在功能分支和合并后的 `main` 上运行：
@@ -310,5 +328,5 @@ Scripts/build-app.sh
 ## Known Limitations
 
 - 原生 WidgetKit 扩展在 ad-hoc 签名或未受系统信任的构建下可能无法出现在 macOS 小组件库。
-- `/Applications/Codex.app/Contents/Resources/codex app-server --stdio` 不可用或未登录时，真实用量读取会降级为不可用。
+- ChatGPT 新版和 Codex 旧版 App 内的 `codex app-server --stdio` 均不可用或未登录时，真实用量读取会降级为不可用。
 - 当前 UI 是 macOS 菜单栏工具，不是完整偏好设置应用或 App Store 发布包。
