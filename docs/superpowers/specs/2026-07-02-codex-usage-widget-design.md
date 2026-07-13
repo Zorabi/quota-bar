@@ -30,6 +30,8 @@ QuotaBar 是一个 macOS 菜单栏工具，用来查看当前 Codex 账号的剩
 - 启动已找到的 `codex app-server --stdio`
 - 调用 `account/rateLimits/read`
 - 解析 `primary`、`secondary`、`credits`、`planType` 和 `rateLimitResetCredits.availableCount`
+- 额度窗口优先按 `windowDurationMins` 识别：`300` 分钟映射为 5 小时，`10080` 分钟映射为 7 天；旧响应缺少该字段时才按 `primary`、`secondary` 位置兼容
+- 5 小时限制临时停用时只展示真实存在的 7 天窗口；限制恢复后自动重新展示 5 小时与 7 天窗口
 - 单次读取允许等待 app-server 初始化、插件和模型状态刷新；默认最多尝试 2 次，每次读取窗口 10 秒，避免 Codex app-server 偶发启动慢导致只收到初始化响应。
 
 数据模型保留可替换 provider 边界：
@@ -64,8 +66,8 @@ QuotaBar 是一个 macOS 菜单栏工具，用来查看当前 Codex 账号的剩
 ## 状态栏下拉面板
 
 - 标题为 `QuotaBar`，副标题说明数据来自 Codex 用量只读接口。
-- 主数字显示 5 小时窗口剩余百分比。
-- 展示 5 小时窗口与 7 天窗口进度条。
+- 主数字优先显示 5 小时窗口剩余百分比，不存在时显示 7 天窗口。
+- 只展示响应中真实存在的 5 小时或 7 天窗口进度条。
 - 标准信息丰富度显示具体重置日期，不显示长倒计时；丰富模式同时显示易读倒计时与具体日期。
 - 展示 Plan、Credits、Reset credits。
 - 刷新状态块显示自动刷新间隔、距下次刷新、上次刷新时间和刷新中状态。
@@ -97,8 +99,8 @@ QuotaBar 是一个 macOS 菜单栏工具，用来查看当前 Codex 账号的剩
 
 ## App 内桌面小组件
 
-- 主数字显示 5 小时窗口剩余百分比。
-- 展示 5 小时窗口、7 天窗口、Plan、Credits、Reset credits。
+- 主数字优先显示 5 小时窗口剩余百分比，不存在时显示 7 天窗口。
+- 展示响应中真实存在的额度窗口、Plan、Credits、Reset credits。
 - 宽度固定，高度按内容自适应，避免重置时间或信息丰富度变化时被裁切。
 - 使用较实的浅色背景，降低壁纸透明度导致文字不可读的概率。
 - 支持普通浮动层级与吸附桌面层级。

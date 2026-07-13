@@ -61,6 +61,34 @@ final class MenuBarUsageFormatterTests: XCTestCase {
         XCTAssertEqual(MenuBarUsageFormatter.format(snapshot, settings: settings), "5h 52% | 7d 42% | 02:27")
     }
 
+    func testMinimalFormatUsesSevenDayWindowWhenFiveHourLimitIsUnavailable() {
+        let snapshot = CodexUsageSnapshot(
+            windows: [
+                UsageWindowSnapshot(kind: .sevenDay, remainingPercentage: 92, resetsIn: 604_800),
+            ],
+            planName: "Plus",
+            credits: 0,
+            freshness: .live
+        )
+        let settings = WidgetSettings(menuBarDensity: .minimal)
+
+        XCTAssertEqual(MenuBarUsageFormatter.format(snapshot, settings: settings), "92%")
+    }
+
+    func testDetailedFormatUsesAvailableWindowResetWhenFiveHourLimitIsUnavailable() {
+        let snapshot = CodexUsageSnapshot(
+            windows: [
+                UsageWindowSnapshot(kind: .sevenDay, remainingPercentage: 92, resetsIn: 604_800),
+            ],
+            planName: "Plus",
+            credits: 0,
+            freshness: .live
+        )
+        let settings = WidgetSettings(menuBarDensity: .detailed)
+
+        XCTAssertEqual(MenuBarUsageFormatter.format(snapshot, settings: settings), "7d 92% | 168:00")
+    }
+
     func testUnavailableSnapshotHidesCodexPlaceholderWhenPrefixIsOff() {
         let settings = WidgetSettings(
             refreshIntervalMinutes: 5,

@@ -37,16 +37,18 @@ struct CodexUsageNativeWidgetView: View {
                     .foregroundStyle(entry.snapshot == nil ? .orange : .green)
             }
 
-            if let snapshot = entry.snapshot, let primary = snapshot.window(.fiveHour) {
+            if let snapshot = entry.snapshot, let primary = snapshot.preferredWindow {
                 Text("\(primary.remainingPercentage)%")
                     .font(.system(size: 42, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Color(red: 0.13, green: 0.52, blue: 0.23))
-                Text("5h remaining")
+                Text("\(primary.kind.menuLabel) remaining")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                 Spacer(minLength: 2)
                 HStack {
-                    Text("7d \(snapshot.window(.sevenDay)?.remainingPercentage ?? 0)%")
+                    if let secondary = snapshot.windows.first(where: { $0.kind != primary.kind }) {
+                        Text("\(secondary.kind.menuLabel) \(secondary.remainingPercentage)%")
+                    }
                     Spacer()
                     Text("R \(snapshot.resetCreditsAvailable)")
                 }

@@ -6,11 +6,12 @@ public enum MenuBarUsageFormatter {
 
         let fiveHour = snapshot.window(.fiveHour)
         let sevenDay = snapshot.window(.sevenDay)
+        let preferredWindow = snapshot.preferredWindow
 
         let title: String
         switch settings.menuBarDensity {
         case .minimal:
-            title = fiveHour.map { "\($0.remainingPercentage)%" } ?? "--"
+            title = preferredWindow.map { "\($0.remainingPercentage)%" } ?? "--"
         case .compact:
             title = [segment(for: fiveHour), segment(for: sevenDay)]
                 .compactMap { $0 }
@@ -19,7 +20,7 @@ public enum MenuBarUsageFormatter {
             let base = [segment(for: fiveHour), segment(for: sevenDay)]
                 .compactMap { $0 }
                 .joined(separator: " | ")
-            guard let resetText = fiveHour?.resetCountdownText else {
+            guard let resetText = preferredWindow?.resetCountdownText else {
                 title = base.isEmpty ? "--" : base
                 return settings.showsCodexPrefix ? "Codex \(title)" : title
             }

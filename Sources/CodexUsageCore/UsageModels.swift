@@ -129,6 +129,10 @@ public struct CodexUsageSnapshot: Codable, Equatable, Sendable {
     public func window(_ kind: UsageWindowKind) -> UsageWindowSnapshot? {
         windows.first { $0.kind == kind }
     }
+
+    public var preferredWindow: UsageWindowSnapshot? {
+        window(.fiveHour) ?? window(.sevenDay)
+    }
 }
 
 public enum DetailLevel: String, CaseIterable, Codable, Sendable {

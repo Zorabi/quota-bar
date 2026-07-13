@@ -4,10 +4,10 @@ QuotaBar 是一个 macOS 菜单栏工具，用来查看当前 Codex 账号剩余
 
 ## 当前能力
 
-- 状态栏紧凑显示：`5h 52% | 7d 42%`
+- 状态栏紧凑显示：同时存在两个限制时为 `5h 52% | 7d 42%`，临时停用 5 小时限制时只显示真实的 7d 指标
 - 状态栏默认不显示应用图标，可选择是否显示 `Codex` 前缀
 - 状态栏下拉面板显示 5h、7d、重置时间、Plan、Credits、Reset credits 和刷新状态
-- App 内桌面小组件显示 5h 主百分比、7d、Plan、Credits 和 Reset credits
+- App 内桌面小组件优先显示 5h 主百分比；5 小时限制不可用时自动改为显示 7d，并保留 Plan、Credits 和 Reset credits
 - App 内桌面小组件支持显示/隐藏和吸附桌面
 - 设置页支持刷新间隔、信息丰富度、状态栏密度、Codex 前缀、桌面小组件、吸附桌面和退出应用
 - 通过 Codex app-server 只读接口读取真实账号用量

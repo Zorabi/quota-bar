@@ -305,6 +305,27 @@ docs/
 - [x] **Step 4: 使用新版 ChatGPT 内的真实 app-server 验证 `account/rateLimits/read` 仍返回当前额度**
 - [x] **Step 5: 运行完整验证**
 
+## Task 14: 兼容临时停用 5 小时额度限制
+
+**Files:**
+- `Sources/CodexUsageCore/CodexRateLimitResponseMapper.swift`
+- `Sources/CodexUsageCore/UsageModels.swift`
+- `Sources/CodexUsageCore/MenuBarUsageFormatter.swift`
+- `Sources/CodexUsageWidgetApp/UsageViews.swift`
+- `Sources/CodexUsageNativeWidgetExtension/CodexUsageNativeWidget.swift`
+- `Tests/CodexUsageCoreTests/UsageModelTests.swift`
+- `Tests/CodexUsageCoreTests/MenuBarUsageFormatterTests.swift`
+
+**Interfaces:**
+- Produces: 基于 `windowDurationMins` 的额度窗口识别，避免把唯一的 7 天 `primary` 窗口误标成 5 小时。
+- Produces: `CodexUsageSnapshot.preferredWindow`，供状态栏、主面板和原生小组件统一选择实际可用窗口。
+
+- [x] **Step 1: 使用真实 app-server 响应复现 `primary` 为 7 天且 `secondary` 为空的临时状态**
+- [x] **Step 2: 写失败测试，验证 7 天窗口不会被错标为 5 小时，并验证只有 7 天时的状态栏格式**
+- [x] **Step 3: 按 `windowDurationMins` 映射窗口，缺少时长字段时保留旧响应位置兼容**
+- [x] **Step 4: 主面板、状态栏和原生小组件改为显示真实存在的窗口，并在恢复 5 小时限制后继续优先显示 5 小时**
+- [x] **Step 5: 运行完整验证**
+
 ## Verification
 
 已在功能分支和合并后的 `main` 上运行：

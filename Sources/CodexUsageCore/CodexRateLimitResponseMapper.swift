@@ -8,8 +8,8 @@ public enum CodexRateLimitResponseMapper {
 
         let limits = response.rateLimitsByLimitId?["codex"] ?? response.rateLimits
         let windows = [
-            window(from: limits.primary, kind: .fiveHour, now: now),
-            window(from: limits.secondary, kind: .sevenDay, now: now),
+            window(from: limits.primary, fallbackKind: .fiveHour, now: now),
+            window(from: limits.secondary, fallbackKind: .sevenDay, now: now),
         ].compactMap { $0 }
 
         guard !windows.isEmpty else {
@@ -27,10 +27,22 @@ public enum CodexRateLimitResponseMapper {
 
     private static func window(
         from limitWindow: AppServerRateLimitWindow?,
-        kind: UsageWindowKind,
+        fallbackKind: UsageWindowKind,
         now: Date
     ) -> UsageWindowSnapshot? {
         guard let limitWindow else {
+            return nil
+        }
+
+        let kind: UsageWindowKind
+        switch limitWindow.windowDurationMins {
+        case 300:
+            kind = .fiveHour
+        case 10_080:
+            kind = .sevenDay
+        case nil:
+            kind = fallbackKind
+        default:
             return nil
         }
 
@@ -79,6 +91,7 @@ private struct AppServerRateLimitSnapshot: Decodable {
 
 private struct AppServerRateLimitWindow: Decodable {
     let usedPercent: Int?
+    let windowDurationMins: Int?
     let resetsAt: Int?
 }
 

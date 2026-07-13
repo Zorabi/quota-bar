@@ -287,13 +287,13 @@ private struct PrimaryUsageBlock: View {
     let snapshot: CodexUsageSnapshot
 
     var body: some View {
-        let primary = snapshot.window(.fiveHour)
+        let primary = snapshot.preferredWindow
         HStack(alignment: .lastTextBaseline, spacing: 10) {
             Text(primary.map { "\($0.remainingPercentage)%" } ?? "--")
                 .font(.system(size: 46, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(Color.quotaAccent)
-            Text("5h remaining")
+            Text(primary.map { "\($0.kind.menuLabel) remaining" } ?? "额度不可用")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
                 .foregroundStyle(Color.quotaPrimaryText)
             Spacer()
@@ -307,8 +307,11 @@ private struct WindowBars: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            UsageBar(window: snapshot.window(.fiveHour), resetStyle: resetStyle)
-            UsageBar(window: snapshot.window(.sevenDay), resetStyle: resetStyle)
+            ForEach(UsageWindowKind.allCases, id: \.self) { kind in
+                if let window = snapshot.window(kind) {
+                    UsageBar(window: window, resetStyle: resetStyle)
+                }
+            }
         }
         .padding(12)
         .background(Color.quotaCardBackground.opacity(0.72), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -316,37 +319,32 @@ private struct WindowBars: View {
 }
 
 private struct UsageBar: View {
-    let window: UsageWindowSnapshot?
+    let window: UsageWindowSnapshot
     let resetStyle: ResetMetadataStyle
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
             HStack {
-                Text(window?.kind.displayTitle ?? "额度窗口")
+                Text(window.kind.displayTitle)
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                 Spacer()
-                Text(window.map { "\($0.remainingPercentage)% remaining" } ?? "--")
+                Text("\(window.remainingPercentage)% remaining")
                     .font(.system(size: 12, weight: .bold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(Color.quotaAccent)
             }
 
-            ProgressView(value: Double(window?.remainingPercentage ?? 0), total: 100)
+            ProgressView(value: Double(window.remainingPercentage), total: 100)
                 .tint(Color.quotaAccent)
 
             HStack {
-                Text("\(window?.usedPercentage ?? 0)% used")
+                Text("\(window.usedPercentage)% used")
                     .lineLimit(1)
                 Spacer()
-                if let window {
-                    Text(resetStyle.text(for: window))
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text("Resets --:--")
-                        .lineLimit(1)
-                }
+                Text(resetStyle.text(for: window))
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .font(.system(size: 11, weight: .medium, design: .rounded))
             .foregroundStyle(Color.quotaSecondaryText)

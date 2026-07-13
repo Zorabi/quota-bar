@@ -194,6 +194,31 @@ final class UsageModelTests: XCTestCase {
         XCTAssertEqual(snapshot.freshness, .live)
     }
 
+    func testRateLimitMapperUsesWindowDurationWhenFiveHourLimitIsTemporarilyDisabled() throws {
+        let json = """
+        {
+          "rateLimits": {
+            "limitId": "codex",
+            "primary": {"usedPercent": 8, "windowDurationMins": 10080, "resetsAt": 1784507185},
+            "secondary": null,
+            "credits": {"hasCredits": false, "unlimited": false, "balance": "0"},
+            "planType": "plus"
+          },
+          "rateLimitResetCredits": {"availableCount": 1}
+        }
+        """
+
+        let snapshot = try XCTUnwrap(CodexRateLimitResponseMapper.map(
+            Data(json.utf8),
+            now: Date(timeIntervalSince1970: 1783902385)
+        ))
+
+        XCTAssertNil(snapshot.window(.fiveHour))
+        XCTAssertEqual(snapshot.window(.sevenDay)?.remainingPercentage, 92)
+        XCTAssertEqual(snapshot.window(.sevenDay)?.resetsIn, 604_800)
+        XCTAssertEqual(snapshot.windows.count, 1)
+    }
+
     func testRateLimitMapperKeepsFiveHourWindowWhenRemainingIsZero() throws {
         let json = """
         {
