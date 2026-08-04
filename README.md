@@ -8,7 +8,7 @@
   <p>
     <img src="https://img.shields.io/badge/macOS-14%2B-000000?logo=apple" alt="macOS 14+">
     <img src="https://img.shields.io/badge/Swift-6.2-F05138?logo=swift&logoColor=white" alt="Swift 6.2">
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-D22128.svg" alt="Apache License 2.0"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="GNU AGPL v3"></a>
   </p>
 </div>
 
@@ -127,4 +127,4 @@ Issues and pull requests are welcome. In a PR, describe the purpose of the chang
 
 ## License
 
-This project is available under the [Apache License 2.0](LICENSE). See [NOTICE](NOTICE) for attribution information.
+This project is available under the [GNU Affero General Public License v3.0](LICENSE) (`AGPL-3.0-only`). See [NOTICE](NOTICE) for attribution information.

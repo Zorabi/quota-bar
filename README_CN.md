@@ -8,7 +8,7 @@
   <p>
     <img src="https://img.shields.io/badge/macOS-14%2B-000000?logo=apple" alt="macOS 14+">
     <img src="https://img.shields.io/badge/Swift-6.2-F05138?logo=swift&logoColor=white" alt="Swift 6.2">
-    <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-D22128.svg" alt="Apache License 2.0"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL%20v3-blue.svg" alt="GNU AGPL v3"></a>
   </p>
 </div>
 
@@ -124,4 +124,4 @@ Scripts/build-app.sh
 
 ## 开源协议
 
-本项目基于 [Apache License 2.0](LICENSE) 开源，归属信息请参阅 [NOTICE](NOTICE)。
+本项目基于 [GNU Affero General Public License v3.0](LICENSE)（`AGPL-3.0-only`）开源，归属信息请参阅 [NOTICE](NOTICE)。

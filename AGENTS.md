@@ -16,6 +16,7 @@
 - 核心能力：只读展示 Codex 5 小时与 7 天用量、重置时间、Plan、Credits 和 Reset credits，并提供菜单栏面板、App 内桌面小组件、设置页和实验性 WidgetKit 扩展。
 - 主应用 Bundle ID：`org.dongx.quota.bar`。
 - Widget 扩展 Bundle ID：`org.dongx.quota.bar.native-widget`。
+- 开源协议：GNU Affero General Public License v3.0（`AGPL-3.0-only`）。
 
 ## 目录与架构
 
