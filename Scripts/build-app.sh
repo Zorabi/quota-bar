@@ -73,7 +73,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © 2026 QuotaBar. All rights reserved.</string>
+  <string>Copyright © 2026 QuotaBar contributors.</string>
 </dict>
 </plist>
 PLIST
@@ -108,7 +108,7 @@ cat > "$WIDGET/Contents/Info.plist" <<'PLIST'
   <key>LSMinimumSystemVersion</key>
   <string>14.0</string>
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © 2026 QuotaBar. All rights reserved.</string>
+  <string>Copyright © 2026 QuotaBar contributors.</string>
   <key>NSExtension</key>
   <dict>
     <key>NSExtensionPointIdentifier</key>

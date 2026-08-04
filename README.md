@@ -1,38 +1,113 @@
-# QuotaBar
+<div align="center">
+  <img src="Resources/QuotaBar.svg" width="112" alt="QuotaBar icon">
+  <h1>QuotaBar</h1>
+  <p>Keep your remaining Codex usage visible in the macOS menu bar.</p>
+  <p>
+    <strong>English</strong> · <a href="README_CN.md">简体中文</a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/macOS-14%2B-000000?logo=apple" alt="macOS 14+">
+    <img src="https://img.shields.io/badge/Swift-6.2-F05138?logo=swift&logoColor=white" alt="Swift 6.2">
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-D22128.svg" alt="Apache License 2.0"></a>
+  </p>
+</div>
 
-QuotaBar 是一个 macOS 菜单栏工具，用来查看当前 Codex 账号剩余用量。
+QuotaBar is a lightweight macOS menu bar utility for tracking the remaining 5-hour and 7-day usage of your current Codex account, together with reset times, Plan, Credits, and Reset credits. It gets data through read-only Codex interfaces, does not inspect the private Codex Desktop database, and never resets usage or changes account state.
 
-## 当前能力
+## Highlights
 
-- 状态栏紧凑显示：同时存在两个限制时为 `5h 52% | 7d 42%`，临时停用 5 小时限制时只显示真实的 7d 指标
-- 状态栏默认不显示应用图标，可选择是否显示 `Codex` 前缀
-- 状态栏下拉面板显示 5h、7d、重置时间、Plan、Credits、Reset credits 和刷新状态
-- App 内桌面小组件优先显示 5h 主百分比；5 小时限制不可用时自动改为显示 7d，并保留 Plan、Credits 和 Reset credits
-- App 内桌面小组件支持显示/隐藏和吸附桌面
-- 设置页支持刷新间隔、信息丰富度、状态栏密度、Codex 前缀、桌面小组件、吸附桌面和退出应用
-- 通过 Codex app-server 只读接口读取真实账号用量
-- 包含实验性 WidgetKit 原生小组件扩展；未签名构建可能无法被 macOS 小组件库收录
+- **Usage at a glance**: shows the remaining 5h / 7d usage in the menu bar; when the 5-hour limit is temporarily disabled, QuotaBar automatically displays only the active 7d metric.
+- **Detailed usage panel**: includes usage windows, reset times, Plan, Credits, Reset credits, and refresh status.
+- **Desktop widget**: offers an in-app widget that can be shown, hidden, or pinned to the desktop layer.
+- **Flexible presentation**: configure refresh interval, information density, menu bar density, the Codex prefix, status item, and Dock icon.
+- **Launch at login**: register QuotaBar as a macOS login item.
+- **Expiration lookup**: manually query the expiration times of all Reset credits from Settings.
+- **Experimental native widget**: includes a WidgetKit extension; unsigned builds are not guaranteed to appear in the macOS widget gallery.
 
-## 运行
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><strong>Menu bar panel</strong></td>
+    <td align="center"><strong>Desktop widget</strong></td>
+  </tr>
+  <tr>
+    <td><img src="marketing/assets/quota-bar-popover-clean.png" alt="QuotaBar menu bar panel"></td>
+    <td><img src="marketing/assets/quota-bar-desktop-widget-clean.png" alt="QuotaBar desktop widget"></td>
+  </tr>
+</table>
+
+<p align="center">
+  <strong>Settings</strong><br>
+  <img src="marketing/assets/quota-bar-settings-window-clean.png" width="720" alt="QuotaBar settings window">
+</p>
+
+> [!NOTE]
+> The application UI shown above is currently in Chinese.
+
+## Requirements
+
+- Apple Silicon Mac (the current packaging script targets `arm64`)
+- macOS 14 Sonoma or later
+- ChatGPT or the legacy Codex macOS app installed and signed in
+- Swift 6.2, Xcode Command Line Tools, and ImageMagick for source builds
+
+## Quick Start
+
+QuotaBar is currently distributed as a source build. Download or clone this repository, then run the following commands from its root:
+
+```bash
+brew install imagemagick
+Scripts/build-app.sh
+open .build/QuotaBar.app
+```
+
+The packaged application will be available at `.build/QuotaBar.app`. To use launch at login or the experimental native widget, move the app to `/Applications` and launch it once:
+
+```bash
+cp -R .build/QuotaBar.app /Applications/
+open /Applications/QuotaBar.app
+```
+
+You can also run the main executable directly with Swift Package Manager. This does not create a complete `.app` bundle or package the native widget extension:
 
 ```bash
 swift run CodexUsageWidgetApp
 ```
 
-## 构建 App
+> [!NOTE]
+> The current build uses ad-hoc code signing and is intended for local development and evaluation. macOS may warn that the app is from an unidentified developer, and the experimental WidgetKit extension may not be registered by the system.
 
-```bash
-Scripts/build-app.sh
-open .build/QuotaBar.app
+## Usage
+
+1. Make sure you are signed in to the ChatGPT or legacy Codex app.
+2. Launch QuotaBar; the active usage windows will appear in the menu bar.
+3. Click the menu bar text to view details, refresh now, or open Settings.
+4. Use Settings to adjust display density, automatic refresh, the desktop widget, Dock icon, and launch at login.
+
+## Data Sources and Privacy
+
+QuotaBar uses the following data sources in a read-only manner:
+
+- Regular usage is obtained from `account/rateLimits/read` through the local `codex app-server --stdio` bundled with the ChatGPT / Codex app.
+- Only when explicitly requested by the user, the Reset credit expiration feature reads the access token from the local Codex credentials and sends a request to a read-only ChatGPT endpoint.
+
+QuotaBar does not read the private Codex Desktop database, nor does it provide sign-in, purchasing, approval, rejection, or usage-reset actions. It does not save task content. Application settings and the latest usage snapshot used by WidgetKit are stored under `Application Support/QuotaBar`; Reset credit expiration results remain in memory for the current session only.
+
+## Project Structure
+
+```text
+Sources/
+├── CodexUsageCore/                  # Models, formatting, settings, and read-only providers
+├── CodexUsageWidgetApp/             # SwiftUI / AppKit menu bar application
+└── CodexUsageNativeWidgetExtension/ # Experimental WidgetKit extension
+Tests/
+└── CodexUsageCoreTests/             # Core logic tests
+Scripts/
+└── build-app.sh                     # Application packaging script
 ```
 
-构建脚本会生成：
-
-- `.build/QuotaBar.app`
-- `QuotaBar.icns`
-- 嵌入式 `CodexUsageNativeWidgetExtension.appex`
-
-## 验证
+## Development and Verification
 
 ```bash
 swift test
@@ -40,8 +115,12 @@ swift build
 Scripts/build-app.sh
 ```
 
-## 真实数据来源
+Make sure all commands pass before submitting a change. Feature work and bug fixes must follow [AGENTS.md](AGENTS.md) and the approved designs and plans under `docs/superpowers/`.
 
-QuotaBar 会自动查找 ChatGPT 新版与 Codex 旧版 App 内的 `codex` 可执行文件，再通过 `app-server --stdio` 调用 `account/rateLimits/read`。系统级和用户级 `Applications` 目录均受支持。
+## Contributing
 
-它只读取账户额度，不读取 Codex Desktop 私有数据库，不调用额度重置接口，也不修改账号状态。
+Issues and pull requests are welcome. In a PR, describe the purpose of the change, how it was verified, and include before-and-after screenshots for UI changes. New or updated code comments, documentation comments, and user-facing copy should be written in Chinese.
+
+## License
+
+This project is available under the [Apache License 2.0](LICENSE). See [NOTICE](NOTICE) for attribution information.
