@@ -672,7 +672,7 @@ private struct InstallToApplicationsButton: View {
         _ = runTool(launchServices, arguments: ["-f", appURL.path])
 
         let added = runTool("/usr/bin/pluginkit", arguments: ["-a", extensionURL.path])
-        let enabled = runTool("/usr/bin/pluginkit", arguments: ["-e", "use", "-i", "dev.quotabar.codex.native-widget"])
+        let enabled = runTool("/usr/bin/pluginkit", arguments: ["-e", "use", "-i", "org.dongx.quota.bar.native-widget"])
         return added && enabled
     }
 

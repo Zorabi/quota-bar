@@ -102,7 +102,8 @@ Sources/
 ├── CodexUsageWidgetApp/             # SwiftUI / AppKit menu bar application
 └── CodexUsageNativeWidgetExtension/ # Experimental WidgetKit extension
 Tests/
-└── CodexUsageCoreTests/             # Core logic tests
+├── CodexUsageCoreTests/             # Core logic tests
+└── BuildAppBundleIdentifierTests.sh # Bundle identifier regression test
 Scripts/
 └── build-app.sh                     # Application packaging script
 ```
@@ -110,10 +111,13 @@ Scripts/
 ## Development and Verification
 
 ```bash
+zsh Tests/BuildAppBundleIdentifierTests.sh
 swift test
 swift build
 Scripts/build-app.sh
 ```
+
+The main application uses `org.dongx.quota.bar`, and the Widget extension uses `org.dongx.quota.bar.native-widget`.
 
 Make sure all commands pass before submitting a change. Feature work and bug fixes must follow [AGENTS.md](AGENTS.md) and the approved designs and plans under `docs/superpowers/`.
 

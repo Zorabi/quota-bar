@@ -99,7 +99,8 @@ Sources/
 ├── CodexUsageWidgetApp/             # SwiftUI / AppKit 菜单栏应用
 └── CodexUsageNativeWidgetExtension/ # 实验性 WidgetKit 扩展
 Tests/
-└── CodexUsageCoreTests/             # 核心逻辑测试
+├── CodexUsageCoreTests/             # 核心逻辑测试
+└── BuildAppBundleIdentifierTests.sh # Bundle ID 回归测试
 Scripts/
 └── build-app.sh                     # App 打包脚本
 ```
@@ -107,10 +108,13 @@ Scripts/
 ## 开发与验证
 
 ```bash
+zsh Tests/BuildAppBundleIdentifierTests.sh
 swift test
 swift build
 Scripts/build-app.sh
 ```
+
+主应用 Bundle ID 为 `org.dongx.quota.bar`，Widget 扩展 Bundle ID 为 `org.dongx.quota.bar.native-widget`。
 
 提交改动前，请确保上述命令全部通过。功能实现与缺陷修复应遵循仓库中的 [AGENTS.md](AGENTS.md) 以及 `docs/superpowers/` 下已批准的设计和计划。
 
