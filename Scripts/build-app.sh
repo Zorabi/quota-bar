@@ -53,7 +53,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleExecutable</key>
   <string>CodexUsageWidgetApp</string>
   <key>CFBundleIdentifier</key>
-  <string>dev.quotabar.codex</string>
+  <string>org.dongx.quota.bar</string>
   <key>CFBundleIconFile</key>
   <string>QuotaBar</string>
   <key>CFBundleInfoDictionaryVersion</key>
@@ -90,7 +90,7 @@ cat > "$WIDGET/Contents/Info.plist" <<'PLIST'
   <key>CFBundleExecutable</key>
   <string>CodexUsageNativeWidgetExtension</string>
   <key>CFBundleIdentifier</key>
-  <string>dev.quotabar.codex.native-widget</string>
+  <string>org.dongx.quota.bar.native-widget</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
