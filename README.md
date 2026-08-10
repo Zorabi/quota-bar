@@ -123,7 +123,7 @@ Make sure all commands pass before submitting a change. Feature work and bug fix
 
 ## Contributing
 
-Issues and pull requests are welcome. In a PR, describe the purpose of the change, how it was verified, and include before-and-after screenshots for UI changes. New or updated code comments, documentation comments, and user-facing copy should be written in Chinese.
+Issues and pull requests are welcome. Read the [contribution guide](CONTRIBUTING.md) before getting started. In a PR, describe the purpose of the change, how it was verified, and include before-and-after screenshots for UI changes. New or updated code comments, documentation comments, and user-facing copy should be written in Chinese.
 
 ## License
 

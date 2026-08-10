@@ -27,6 +27,7 @@
 - `Tests/BuildAppBundleIdentifierTests.sh`：打包 Bundle ID 回归测试。
 - `Scripts/build-app.sh`：Release 构建、`.app` / `.appex` 组装、Info.plist 生成、图标打包和 ad-hoc 签名。
 - `Resources/`：应用图标源文件。
+- `CONTRIBUTING.md`：面向外部贡献者的开发流程、项目不变量和提交规范。
 - `docs/superpowers/specs/`：已批准的产品与技术设计。
 - `docs/superpowers/plans/`：对应的实施记录。
 
