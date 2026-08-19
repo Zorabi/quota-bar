@@ -33,7 +33,7 @@
 
 ## 数据与安全边界
 
-- 常规用量只通过本机 ChatGPT / 旧版 Codex App 内的 `codex app-server --stdio` 获取，使用 `account/rateLimits/read`。
+- 常规用量通过 ChatGPT 后端只读端点 `/backend-api/wham/usage` 获取；凭据只读取本机 Codex 登录态（`auth.json`），应用不写入该文件。
 - Reset credits 过期时间只在用户手动触发时查询，并且只读取完成该请求所需的本机 Codex 登录凭据。
 - 不读取 ChatGPT 或 Codex Desktop 的私有数据库。
 - 不提供或代替用户执行登录、购买、批准、拒绝、额度重置等写操作。
