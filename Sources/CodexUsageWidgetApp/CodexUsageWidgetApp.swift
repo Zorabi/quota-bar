@@ -24,7 +24,7 @@ struct CodexUsageWidgetApp: App {
 
 @MainActor
 final class AppCoordinator: NSObject, NSApplicationDelegate {
-    let model = AppModel(provider: CodexAppServerUsageProvider())
+    let model = AppModel(provider: WhamUsageProvider())
     private let desktopWidgetController = DesktopWidgetController()
     private let settingsWindowController = SettingsWindowController()
     private var statusItemController: StatusItemController?
