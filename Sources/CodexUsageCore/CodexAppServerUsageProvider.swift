@@ -24,18 +24,18 @@ public struct CodexAppServerUsageProvider: UsageProviding {
         candidates.first(where: isExecutable)
     }
 
-    public func fetchUsage() -> CodexUsageSnapshot? {
+    public func fetchUsage() -> Result<CodexUsageSnapshot, UsageProviderError> {
         guard FileManager.default.isExecutableFile(atPath: codexExecutablePath) else {
-            return nil
+            return .failure(.missingAuth)
         }
 
         for _ in 0..<maximumAttempts {
             let output = runAppServerRead()
             if let snapshot = Self.extractRateLimitSnapshot(from: output) {
-                return snapshot
+                return .success(snapshot)
             }
         }
-        return nil
+        return .failure(.invalidResponse)
     }
 
     private func runAppServerRead() -> String {

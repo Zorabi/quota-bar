@@ -40,6 +40,11 @@ struct StatusPopoverView: View {
                 RefreshStatusStrip(model: model)
             } else {
                 UnavailableBlock()
+                if let usageErrorText = model.usageErrorText {
+                    Text(usageErrorText)
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.red)
+                }
             }
 
             HStack(spacing: 8) {

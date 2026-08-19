@@ -58,14 +58,18 @@ final class UsageModelTests: XCTestCase {
     }
 
     func testMockProviderSuppliesBothCodexUsageWindows() {
-        let snapshot = MockUsageProvider().fetchUsage()
+        guard
+        case .success(let snapshot) = MockUsageProvider().fetchUsage() else {
+            XCTFail("MockUsageProvider 应返回成功结果")
+            return
+        }
 
-        XCTAssertEqual(snapshot?.window(.fiveHour)?.remainingPercentage, 52)
-        XCTAssertEqual(snapshot?.window(.sevenDay)?.remainingPercentage, 42)
-        XCTAssertEqual(snapshot?.planName, "Plus")
-        XCTAssertEqual(snapshot?.credits, 0)
-        XCTAssertEqual(snapshot?.resetCreditsAvailable, 3)
-        XCTAssertEqual(snapshot?.freshness, .live)
+        XCTAssertEqual(snapshot.window(.fiveHour)?.remainingPercentage, 52)
+        XCTAssertEqual(snapshot.window(.sevenDay)?.remainingPercentage, 42)
+        XCTAssertEqual(snapshot.planName, "Plus")
+        XCTAssertEqual(snapshot.credits, 0)
+        XCTAssertEqual(snapshot.resetCreditsAvailable, 3)
+        XCTAssertEqual(snapshot.freshness, .live)
     }
 
     func testWidgetSettingsStorePersistsSettingsToDisk() throws {

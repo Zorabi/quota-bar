@@ -9,6 +9,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var isRefreshing = false
     @Published private(set) var resetCreditExpirySnapshot: ResetCreditExpirySnapshot?
     @Published private(set) var resetCreditExpiryErrorText: String?
+    @Published private(set) var usageErrorText: String?
     @Published private(set) var isQueryingResetCreditExpirations = false
     @Published private(set) var settings: WidgetSettings {
         didSet {
@@ -52,12 +53,16 @@ final class AppModel: ObservableObject {
         isRefreshing = true
         let provider = provider
         Task.detached {
-            let snapshot = provider.fetchUsage()
+            let result = provider.fetchUsage()
             await MainActor.run {
-                if let snapshot {
+                switch result {
+                case .success(let snapshot):
                     self.snapshot = snapshot
                     self.lastRefreshedAt = Date()
+                    self.usageErrorText = nil
                     SharedUsageSnapshotStore.save(snapshot)
+                case .failure(let error):
+                    self.usageErrorText = UsageProviderErrorDisplayFormatter.errorText(error)
                 }
                 self.isRefreshing = false
                 self.restartTimer()
