@@ -38,6 +38,11 @@ struct StatusPopoverView: View {
                     AccountStrip(snapshot: snapshot)
                 }
                 RefreshStatusStrip(model: model)
+                if let usageErrorText = model.usageErrorText {
+                    Text(usageErrorText)
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.red)
+                }
             } else {
                 UnavailableBlock()
                 if let usageErrorText = model.usageErrorText {
@@ -80,7 +85,7 @@ struct SettingsPanelView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("QuotaBar 设置")
                         .font(.system(size: 24, weight: .bold, design: .rounded))
-                    Text("调整状态栏显示、刷新频率和详情密度。真实用量来自 Codex app-server 只读接口。")
+                    Text("调整状态栏显示、刷新频率和详情密度。真实用量来自 ChatGPT 后端只读接口。")
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                         .foregroundStyle(Color(nsColor: .secondaryLabelColor))
                 }
@@ -759,7 +764,7 @@ private struct UnavailableBlock: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("未连接当前账号")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-            Text("无法从 Codex app-server 读取只读额度接口。请确认 Codex 已登录，然后点击刷新。")
+            Text("无法读取用量接口。请确认 Codex 已登录，然后点击刷新。")
                 .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(Color.quotaSecondaryText)
                 .fixedSize(horizontal: false, vertical: true)

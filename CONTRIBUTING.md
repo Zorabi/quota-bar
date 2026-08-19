@@ -44,7 +44,7 @@ brew install imagemagick
 
 ## 项目不变量
 
-- 常规用量只通过本机 ChatGPT / 旧版 Codex App 内的 `codex app-server --stdio` 读取，不访问应用私有数据库。
+- 常规用量通过 ChatGPT 后端只读端点 /backend-api/wham/usage 获取；凭据只读取本机 Codex 登录态（auth.json），应用不写入该文件。
 - Reset credits 过期时间只在用户手动触发时查询，结果仅保留在当前运行会话中。
 - 不提供登录、购买、批准、拒绝、额度重置或其他账号写操作。
 - 不持久化任务内容；仅应用设置和供 WidgetKit 使用的最近一次用量快照可写入 `Application Support/QuotaBar`。

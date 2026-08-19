@@ -89,7 +89,7 @@ swift run CodexUsageWidgetApp
 
 QuotaBar uses the following data sources in a read-only manner:
 
-- Regular usage is obtained from `account/rateLimits/read` through the local `codex app-server --stdio` bundled with the ChatGPT / Codex app.
+- Regular usage is obtained from the read-only ChatGPT endpoint `https://chatgpt.com/backend-api/wham/usage`; credentials only read the local Codex login state (auth.json).
 - Only when explicitly requested by the user, the Reset credit expiration feature reads the access token from the local Codex credentials and sends a request to a read-only ChatGPT endpoint.
 
 QuotaBar does not read the private Codex Desktop database, nor does it provide sign-in, purchasing, approval, rejection, or usage-reset actions. It does not save task content. Application settings and the latest usage snapshot used by WidgetKit are stored under `Application Support/QuotaBar`; Reset credit expiration results remain in memory for the current session only.

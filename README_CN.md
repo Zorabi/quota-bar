@@ -86,7 +86,7 @@ swift run CodexUsageWidgetApp
 
 QuotaBar 以只读方式使用以下数据源：
 
-- 常规用量通过本机 ChatGPT / Codex App 内的 `codex app-server --stdio` 获取，调用 `account/rateLimits/read`。
+- 常规用量通过 ChatGPT 后端只读端点 `https://chatgpt.com/backend-api/wham/usage` 获取；凭据只读取本机 Codex 登录态（auth.json）。
 - 只有在用户手动点击查询时，Reset credits 过期时间功能才会读取本机 Codex 登录凭据中的 access token，并向 ChatGPT 的只读接口发起请求。
 
 QuotaBar 不读取 Codex Desktop 私有数据库，也不提供登录、购买、批准、拒绝或重置额度功能。它不会保存任务内容；应用设置和供 WidgetKit 展示的最近一次用量快照会写入 `Application Support/QuotaBar`，Reset credits 过期时间查询结果仅保留在当前运行会话中。
