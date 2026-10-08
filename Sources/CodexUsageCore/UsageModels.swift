@@ -188,6 +188,7 @@ public enum AppearanceMode: String, CaseIterable, Codable, Sendable {
 
 public struct WidgetSettings: Codable, Equatable, Sendable {
     public var refreshIntervalMinutes: Int
+    public var automaticallyRefreshes: Bool
     public var detailLevel: DetailLevel
     public var menuBarDensity: MenuBarDensity
     public var appearanceMode: AppearanceMode
@@ -199,6 +200,7 @@ public struct WidgetSettings: Codable, Equatable, Sendable {
 
     public init(
         refreshIntervalMinutes: Int = 5,
+        automaticallyRefreshes: Bool = true,
         detailLevel: DetailLevel = .rich,
         menuBarDensity: MenuBarDensity = .compact,
         appearanceMode: AppearanceMode = .system,
@@ -209,6 +211,7 @@ public struct WidgetSettings: Codable, Equatable, Sendable {
         launchesAtLogin: Bool = false
     ) {
         self.refreshIntervalMinutes = refreshIntervalMinutes
+        self.automaticallyRefreshes = automaticallyRefreshes
         self.detailLevel = detailLevel
         self.menuBarDensity = menuBarDensity
         self.appearanceMode = appearanceMode
@@ -235,6 +238,7 @@ public struct WidgetSettings: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case refreshIntervalMinutes
+        case automaticallyRefreshes
         case detailLevel
         case menuBarDensity
         case appearanceMode
@@ -249,6 +253,7 @@ public struct WidgetSettings: Codable, Equatable, Sendable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             refreshIntervalMinutes: try container.decodeIfPresent(Int.self, forKey: .refreshIntervalMinutes) ?? 5,
+            automaticallyRefreshes: try container.decodeIfPresent(Bool.self, forKey: .automaticallyRefreshes) ?? true,
             detailLevel: try container.decodeIfPresent(DetailLevel.self, forKey: .detailLevel) ?? .rich,
             menuBarDensity: try container.decodeIfPresent(MenuBarDensity.self, forKey: .menuBarDensity) ?? .compact,
             appearanceMode: try container.decodeIfPresent(AppearanceMode.self, forKey: .appearanceMode) ?? .system,

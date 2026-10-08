@@ -78,6 +78,7 @@ final class UsageModelTests: XCTestCase {
         let store = WidgetSettingsStore(url: directory.appendingPathComponent("settings.json"))
         let settings = WidgetSettings(
             refreshIntervalMinutes: 15,
+            automaticallyRefreshes: false,
             detailLevel: .standard,
             menuBarDensity: .detailed,
             appearanceMode: .dark,
@@ -107,10 +108,15 @@ final class UsageModelTests: XCTestCase {
 
         let settings = try JSONDecoder().decode(WidgetSettings.self, from: Data(json.utf8))
 
+        XCTAssertTrue(settings.automaticallyRefreshes)
         XCTAssertTrue(settings.showsStatusItem)
         XCTAssertFalse(settings.showsDockIcon)
         XCTAssertFalse(settings.launchesAtLogin)
         XCTAssertEqual(settings.appearanceMode, .system)
+    }
+
+    func testAutomaticRefreshDefaultsToEnabled() {
+        XCTAssertTrue(WidgetSettings().automaticallyRefreshes)
     }
 
     func testAppearanceModeProvidesChineseDisplayText() {

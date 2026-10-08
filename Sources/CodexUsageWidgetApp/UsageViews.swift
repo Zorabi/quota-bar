@@ -32,12 +32,13 @@ struct StatusPopoverView: View {
             if let snapshot = model.snapshot {
                 PrimaryUsageBlock(snapshot: snapshot)
                 if model.settings.detailLevel != .concise {
+                    PanelDivider(title: "用量窗口")
                     WindowBars(snapshot: snapshot, resetStyle: model.settings.detailLevel == .standard ? .dateOnly : .countdownAndDate)
                 }
                 if model.settings.detailLevel == .rich {
+                    PanelDivider(title: "账户信息")
                     AccountStrip(snapshot: snapshot)
                 }
-                RefreshStatusStrip(model: model)
                 if let usageErrorText = model.usageErrorText {
                     Text(usageErrorText)
                         .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -52,6 +53,8 @@ struct StatusPopoverView: View {
                 }
             }
 
+            PanelDivider(title: "操作")
+            RefreshStatusStrip(model: model)
             HStack(spacing: 8) {
                 CompactActionButton(title: "桌面小组件", prominence: .secondary, action: onToggleWidget)
                 CompactActionButton(title: "设置", prominence: .secondary, action: onOpenSettings)
@@ -61,6 +64,7 @@ struct StatusPopoverView: View {
                 .disabled(model.isRefreshing)
                 .frame(minWidth: 76)
             }
+
         }
         .padding(16)
         .frame(width: 356)
@@ -90,19 +94,15 @@ struct SettingsPanelView: View {
                         .foregroundStyle(Color(nsColor: .secondaryLabelColor))
                 }
 
+                SettingsSectionTitle("刷新与数据")
                 RefreshStatusStrip(model: model)
                 SettingsActionStrip(model: model)
                 ResetCreditExpirySettingsSection(model: model)
 
-                SettingsRow(title: "外观", detail: "跟随系统，或固定使用深色、浅色") {
-                    Picker("", selection: settingsBinding(\.appearanceMode)) {
-                        ForEach(AppearanceMode.allCases, id: \.self) { mode in
-                            Text(mode.displayText).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .frame(width: 230)
+                SettingsRow(title: "自动刷新", detail: "关闭后只会在你点击刷新时读取用量") {
+                    Toggle("", isOn: settingsBinding(\.automaticallyRefreshes))
+                        .toggleStyle(.switch)
+                        .labelsHidden()
                 }
 
                 SettingsRow(title: "刷新间隔", detail: "多久重新读取一次当前账号用量") {
@@ -113,6 +113,19 @@ struct SettingsPanelView: View {
                     }
                     .labelsHidden()
                     .frame(width: 150)
+                    .disabled(!model.settings.automaticallyRefreshes)
+                }
+
+                SettingsSectionTitle("显示与外观")
+                SettingsRow(title: "外观", detail: "跟随系统，或固定使用深色、浅色") {
+                    Picker("", selection: settingsBinding(\.appearanceMode)) {
+                        ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                            Text(mode.displayText).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(width: 230)
                 }
 
                 VStack(alignment: .leading, spacing: 10) {
@@ -143,6 +156,7 @@ struct SettingsPanelView: View {
                     SettingsPreviewCard(model: model)
                 }
 
+                SettingsSectionTitle("状态栏")
                 SettingsRow(title: "Codex 字样", detail: "控制状态栏是否显示 Codex 前缀") {
                     Toggle("", isOn: settingsBinding(\.showsCodexPrefix))
                         .toggleStyle(.switch)
@@ -155,6 +169,7 @@ struct SettingsPanelView: View {
                         .labelsHidden()
                 }
 
+                SettingsSectionTitle("窗口与启动")
                 SettingsRow(title: "Dock 图标", detail: "控制是否在 Dock 和应用菜单栏显示 QuotaBar；关闭设置窗口后生效") {
                     Toggle("", isOn: settingsBinding(\.showsDockIcon))
                         .toggleStyle(.switch)
@@ -175,6 +190,7 @@ struct SettingsPanelView: View {
                     }
                 }
 
+                SettingsSectionTitle("桌面小组件")
                 SettingsRow(title: "桌面小组件", detail: "显示 App 内悬浮小组件；原生系统小组件请在 macOS 小组件库中添加") {
                     HStack(spacing: 10) {
                         Button("显示/隐藏") {
@@ -198,6 +214,7 @@ struct SettingsPanelView: View {
                     }
                 }
 
+                SettingsSectionTitle("应用")
                 ExitAppSection()
             }
             .padding(24)
@@ -245,10 +262,13 @@ struct DesktopWidgetView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HeaderStrip(model: model)
+            PanelDivider(title: "用量概览")
 
             if let snapshot = model.snapshot {
                 PrimaryUsageBlock(snapshot: snapshot)
+                PanelDivider(title: "窗口详情")
                 WindowBars(snapshot: snapshot, resetStyle: .countdownAndDate)
+                PanelDivider(title: "账号信息")
                 AccountStrip(snapshot: snapshot)
             } else {
                 UnavailableBlock()
@@ -272,6 +292,29 @@ struct DesktopWidgetView: View {
                 .stroke(Color.quotaCardBackground.opacity(0.55), lineWidth: 1)
         )
         .preferredColorScheme(model.settings.appearanceMode.colorScheme)
+    }
+}
+
+private struct PanelDivider: View {
+    let title: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Rectangle()
+                .fill(Color.quotaAccent.opacity(0.35))
+                .frame(height: 1)
+            Text(title)
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.quotaAccent)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Color.quotaAccent.opacity(0.12), in: Capsule())
+            Rectangle()
+                .fill(Color.quotaAccent.opacity(0.35))
+                .frame(height: 1)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
     }
 }
 
@@ -589,10 +632,10 @@ private struct RefreshStatusStrip: View {
                 .frame(width: 30, height: 30)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(model.isRefreshing ? "正在刷新" : "自动刷新")
+                    Text(model.isRefreshing ? "正在刷新" : (model.settings.automaticallyRefreshes ? "自动刷新" : "手动刷新"))
                         .font(.system(size: 12, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.quotaPrimaryText)
-                    Text("每 \(model.settings.refreshIntervalMinutes) 分钟")
+                    Text(model.settings.automaticallyRefreshes ? "每 \(model.settings.refreshIntervalMinutes) 分钟" : "仅手动刷新")
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .foregroundStyle(Color.quotaSecondaryText)
                 }
@@ -600,7 +643,7 @@ private struct RefreshStatusStrip: View {
                 Spacer(minLength: 8)
 
                 VStack(alignment: .trailing, spacing: 3) {
-                    Text(model.isRefreshing ? "读取中" : "距下次 \(RefreshScheduleFormatter.remainingText(until: model.nextRefreshAt, now: timeline.date))")
+                    Text(model.isRefreshing ? "读取中" : (model.settings.automaticallyRefreshes ? "距下次 \(RefreshScheduleFormatter.remainingText(until: model.nextRefreshAt, now: timeline.date))" : "等待手动刷新"))
                         .font(.system(size: 12, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.quotaAccent)
                         .lineLimit(1)
@@ -639,6 +682,26 @@ private struct SettingsRow<Control: View>: View {
         }
         .padding(14)
         .background(Color.quotaCardBackground.opacity(0.76), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+private struct SettingsSectionTitle: View {
+    let title: String
+
+    init(_ title: String) {
+        self.title = title
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Divider()
+            Text(title)
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(Color.quotaAccent)
+                .textCase(.uppercase)
+                .tracking(0.8)
+        }
+        .padding(.top, 8)
     }
 }
 

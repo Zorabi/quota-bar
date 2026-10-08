@@ -14,7 +14,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var settings: WidgetSettings {
         didSet {
             settingsStore.save(settings)
-            restartTimer()
+            configureRefreshSchedule()
         }
     }
 
@@ -33,7 +33,9 @@ final class AppModel: ObservableObject {
         self.settingsStore = settingsStore
         self.settings = (settingsStore.load() ?? WidgetSettings()).normalizedForPresentation()
         self.snapshot = nil
-        refresh()
+        if settings.automaticallyRefreshes {
+            refresh()
+        }
     }
 
     var menuBarTitle: String {
@@ -65,7 +67,7 @@ final class AppModel: ObservableObject {
                     self.usageErrorText = UsageProviderErrorDisplayFormatter.errorText(error)
                 }
                 self.isRefreshing = false
-                self.restartTimer()
+                self.configureRefreshSchedule()
             }
         }
     }
@@ -92,8 +94,13 @@ final class AppModel: ObservableObject {
         }
     }
 
-    private func restartTimer() {
+    private func configureRefreshSchedule() {
         timer?.invalidate()
+        timer = nil
+        guard settings.automaticallyRefreshes else {
+            nextRefreshAt = nil
+            return
+        }
         let interval = TimeInterval(settings.refreshIntervalMinutes * 60)
         nextRefreshAt = Date().addingTimeInterval(interval)
 
