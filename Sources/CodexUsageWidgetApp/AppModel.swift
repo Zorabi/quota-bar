@@ -33,9 +33,8 @@ final class AppModel: ObservableObject {
         self.settingsStore = settingsStore
         self.settings = (settingsStore.load() ?? WidgetSettings()).normalizedForPresentation()
         self.snapshot = nil
-        if settings.automaticallyRefreshes {
-            refresh()
-        }
+        // 启动时始终读取一次最新用量；自动刷新开关只控制后续定时任务。
+        refresh()
     }
 
     var menuBarTitle: String {
